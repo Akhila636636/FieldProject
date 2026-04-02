@@ -34,6 +34,7 @@ import {
   serverTimestamp,
   collectionGroup,
   where,
+  getDocs,
 } from "firebase/firestore";
 import type { ProjectRecommendation } from "@/docs/backend-schema";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -288,8 +289,11 @@ export default function ChatPage() {
       where("isBookmarked", "==", true)
     );
     
-    // Temporarily disabling bookmark-based recommendations to debug permissions error.
-    const bookmarkedProjects: string[] = [];
+    const bookmarkedProjectsSnapshot = await getDocs(bookmarkedProjectsQuery);
+    const bookmarkedProjects = bookmarkedProjectsSnapshot.docs.map(doc => {
+        const data = doc.data();
+        return `${data.title} (Tech: ${data.techStack})`;
+    });
 
     const response = await getProjectRecommendations(
       formatChatHistoryForAI(chatHistory),
