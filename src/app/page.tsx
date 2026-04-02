@@ -10,6 +10,7 @@ import {
   signInWithEmailAndPassword,
   type Auth,
   type AuthError,
+  signOut,
 } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { useAuth, useUser } from "@/firebase/provider";
@@ -62,10 +63,23 @@ export default function AuthPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!isUserLoading && user) {
-      router.replace("/chat");
+    if (isUserLoading) {
+      return; // Wait until auth state is loaded
     }
-  }, [user, isUserLoading, router]);
+
+    if (user) {
+      // If the user is anonymous, we sign them out so they can see the
+      // login/signup form and create a proper account.
+      if (user.isAnonymous) {
+        signOut(auth);
+        // The onAuthStateChanged listener will handle the re-render.
+      } else {
+        // If it's a regular user, redirect to the chat page.
+        router.replace("/chat");
+      }
+    }
+    // If there's no user, the component will render the login form.
+  }, [user, isUserLoading, router, auth]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
