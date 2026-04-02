@@ -128,7 +128,7 @@ export default function Home() {
     [user, conversationId, firestore]
   );
   const { data: projectRecommendations } =
-    useCollection<ProjectRecommendation>(recommendationsQuery);
+    useCollection<WithId<ProjectRecommendation>>(recommendationsQuery);
 
   // Construct the full recommendations object for the UI
   const recommendations = useMemo<GenerateProjectRecommendationsOutput | null>(() => {
@@ -369,3 +369,5 @@ export default function Home() {
     </div>
   );
 }
+
+    

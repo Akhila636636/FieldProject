@@ -112,7 +112,8 @@
         "id",
         "conversationId",
         "summaryText",
-        "inferredInterests"
+        "inferredInterests",
+        "updatedAt"
       ]
     },
     "ProjectRecommendation": {
@@ -141,6 +142,42 @@
           "type": "number",
           "description": "The sequential order of this recommendation within a set of projects (e.g., 1, 2, or 3)."
         },
+        "whyItMatchesUser": {
+          "type": "string",
+          "description": "A personalized explanation of why the project fits the user."
+        },
+        "techStack": {
+          "type": "string",
+          "description": "A comma-separated list of recommended technologies."
+        },
+        "difficulty": {
+          "type": "string",
+          "description": "The project's difficulty level (e.g., Easy, Medium, Hard)."
+        },
+        "resumeValue": {
+          "type": "string",
+          "description": "A summary of why the project is valuable for a resume."
+        },
+        "roadmap": {
+          "type": "object",
+          "description": "A step-by-step project roadmap.",
+          "properties": {
+            "learn": {
+              "type": "string"
+            },
+            "buildFirst": {
+              "type": "string"
+            },
+            "advanced": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "learn",
+            "buildFirst",
+            "advanced"
+          ]
+        },
         "isBookmarked": {
           "type": "boolean",
           "description": "Indicates if the project is bookmarked by the user."
@@ -151,7 +188,12 @@
         "conversationId",
         "title",
         "description",
-        "order"
+        "order",
+        "whyItMatchesUser",
+        "techStack",
+        "difficulty",
+        "resumeValue",
+        "roadmap"
       ]
     }
   },
@@ -275,3 +317,4 @@
     "reasoning": "The Firestore structure is designed to be secure, scalable, and debuggable, adhering strictly to the core design principles and strategy mandates provided. The primary design choice is a user-centric, hierarchical structure, which is ideal for managing private, user-owned data.\n\n**Authorization Independence (CRITICAL) & Denormalization:**\nTo achieve authorization independence and eliminate the need for `get()` calls in security rules, a critical strategy of denormalization is applied. Every document (`Conversation`, `Message`, `UserProfileSummary`, `ProjectRecommendation`) contains an `ownerId` field. This `ownerId` will store the `uid` of the user who owns the data, directly mirroring the `{userId}` wildcard in the path. This allows security rules to evaluate `request.auth.uid == resource.data.ownerId` for any document, regardless of its depth, ensuring atomic operations and simplified rule debugging. This completely avoids `get()` calls that would create hierarchical authorization dependencies.\n\n**Structural Segregation & Access Modeling (QAPs):**\nAll data within this structure inherently belongs to a specific user. The top-level collection `/users/{userId}` serves as the anchor for all user-specific information. By nesting `conversations`, `messages`, `profileSummaries`, and `projectRecommendations` under this user path, we ensure structural segregation. All documents under a given `/users/{userId}` path share the same security posture: they are private to that user. This makes security rules simple and efficient for `list` operations (QAPs - Query as you please), as queries like `db.collection('users').doc(request.auth.uid).collection('conversations')` will inherently only return data owned by the authenticated user, without requiring additional filters in rules. The denormalized `ownerId` within each document provides an additional layer of explicit authorization check, making the system robust against any attempts to bypass path-based access.\n\n**Data Clarity and Predictability:**\nSemantic naming conventions are used for paths (`{userId}`, `{conversationId}`). The `id` field within each entity schema is assumed to correspond to the document ID in its respective collection path, ensuring predictable data access and retrieval. A conceptual `User` entity is assumed for the `/users/{userId}` path to anchor user-specific data, although its schema was not explicitly provided in the input."
   }
 }
+    

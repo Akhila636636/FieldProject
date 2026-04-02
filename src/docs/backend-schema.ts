@@ -89,14 +89,34 @@ export type ProjectRecommendation = {
    * The sequential order of this recommendation within a set of projects (e.g., 1, 2, or 3).
    */
   order: number;
+  /**
+   * A personalized explanation of why the project fits the user.
+   */
   whyItMatchesUser: string;
+  /**
+   * A comma-separated list of recommended technologies.
+   */
   techStack: string;
+  /**
+   * The project's difficulty level (e.g., Easy, Medium, Hard).
+   */
   difficulty: string;
+  /**
+   * A summary of why the project is valuable for a resume.
+   */
   resumeValue: string;
+  /**
+   * A step-by-step project roadmap.
+   */
   roadmap: {
     learn: string;
     buildFirst: string;
     advanced: string;
   };
+  /**
+   * Indicates if the project is bookmarked by the user.
+   */
   isBookmarked?: boolean;
 };
+
+    
