@@ -8,14 +8,23 @@ import { useToast } from "@/hooks/use-toast";
 import { ChatDisplay } from "@/components/app/chat-display";
 import type { GenerateProjectRecommendationsOutput } from "@/ai/flows/generate-project-recommendations-flow";
 
-export type Message = {
+export type ChatMessage = {
   role: "user" | "assistant";
-  content: string | GenerateProjectRecommendationsOutput;
+  content: string;
 };
 
+interface AppState {
+  chatHistory: ChatMessage[];
+  lastRecommendation: GenerateProjectRecommendationsOutput | null;
+  isLoading: boolean;
+}
+
 export default function Home() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [state, setState] = useState<AppState>({
+    chatHistory: [],
+    lastRecommendation: null,
+    isLoading: false,
+  });
   const { toast } = useToast();
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
@@ -24,26 +33,42 @@ export default function Home() {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [state.chatHistory, state.lastRecommendation]);
 
 
   const handleSubmit = async (message: string) => {
-    setIsLoading(true);
-    const newMessages: Message[] = [...messages, { role: "user", content: message }];
-    setMessages(newMessages);
+    const newUserMessage: ChatMessage = { role: "user", content: message };
+    
+    const newChatHistory = [...state.chatHistory, newUserMessage];
 
-    const response = await getProjectRecommendations(newMessages);
+    // Update state with new user message and set loading
+    setState(prevState => ({
+      ...prevState,
+      chatHistory: newChatHistory,
+      isLoading: true,
+    }));
 
-    setIsLoading(false);
+    const response = await getProjectRecommendations(newChatHistory);
+
     if (response.error) {
       toast({
         variant: "destructive",
         title: "Oh no! Something went wrong.",
         description: response.error,
       });
-      setMessages((prev) => [...prev, { role: "assistant", content: `Sorry, an error occurred: ${response.error}` }]);
+      setState(prevState => ({
+        ...prevState,
+        chatHistory: [...prevState.chatHistory, { role: "assistant", content: `Sorry, an error occurred: ${response.error}` }],
+        isLoading: false,
+      }));
     } else if (response.data) {
-      setMessages((prev) => [...prev, { role: "assistant", content: response.data }]);
+      setState(prevState => ({
+        chatHistory: [...prevState.chatHistory, { role: "assistant", content: "Here are some project ideas based on our conversation. I've updated your profile and recommendations below." }],
+        lastRecommendation: response.data,
+        isLoading: false,
+      }));
+    } else {
+      setState(prevState => ({ ...prevState, isLoading: false }));
     }
   };
 
@@ -51,11 +76,15 @@ export default function Home() {
     <div className="flex flex-col h-screen bg-background">
       <Header />
       <main ref={chatContainerRef} className="flex-1 w-full max-w-3xl mx-auto px-4 py-8 overflow-y-auto">
-        <ChatDisplay messages={messages} isLoading={isLoading} />
+        <ChatDisplay 
+          chatHistory={state.chatHistory} 
+          recommendations={state.lastRecommendation} 
+          isLoading={state.isLoading} 
+        />
       </main>
       <div className="sticky bottom-0 w-full bg-background/80 backdrop-blur-sm">
         <div className="w-full max-w-3xl mx-auto px-4 pb-4 pt-2">
-          <ChatForm onSubmit={handleSubmit} isLoading={isLoading} />
+          <ChatForm onSubmit={handleSubmit} isLoading={state.isLoading} />
         </div>
       </div>
     </div>

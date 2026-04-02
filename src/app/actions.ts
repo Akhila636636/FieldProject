@@ -5,30 +5,20 @@ import {
   type GenerateProjectRecommendationsOutput,
   type GenerateProjectRecommendationsInput,
 } from "@/ai/flows/generate-project-recommendations-flow";
-import type { Message } from "@/app/page";
+import type { ChatMessage } from "@/app/page";
 
 // Helper to format the frontend message history for the Genkit flow
 function formatChatHistoryForAI(
-  messages: Message[]
+  messages: ChatMessage[]
 ): GenerateProjectRecommendationsInput["chatHistory"] {
-  return messages.map((message) => {
-    let content: string;
-    if (typeof message.content === "string") {
-      content = message.content;
-    } else {
-      // For assistant messages that are structured objects, create a simple summary for the AI's context.
-      content = "I have provided the user with a list of project recommendations.";
-    }
-
-    return {
-      role: message.role === "user" ? "user" : "model",
-      parts: [{ text: content }],
-    };
-  });
+  return messages.map((message) => ({
+    role: message.role === "user" ? "user" : "model",
+    parts: [{ text: message.content }],
+  }));
 }
 
 export async function getProjectRecommendations(
-  messages: Message[]
+  messages: ChatMessage[]
 ): Promise<{
   data?: GenerateProjectRecommendationsOutput;
   error?: string;
