@@ -88,13 +88,33 @@
           "items": {
             "type": "string"
           }
+        },
+        "preferences": {
+          "type": "array",
+          "description": "An array of user preferences like 'creative' or 'logical'.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "goals": {
+          "type": "array",
+          "description": "An array of user goals like 'learn a new language'.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the summary was last updated.",
+          "format": "date-time"
         }
       },
       "required": [
         "id",
         "conversationId",
         "summaryText",
-        "inferredInterests"
+        "inferredInterests",
+        "updatedAt"
       ]
     },
     "ProjectRecommendation": {
@@ -122,6 +142,46 @@
         "order": {
           "type": "number",
           "description": "The sequential order of this recommendation within a set of projects (e.g., 1, 2, or 3)."
+        },
+        "whyItMatchesUser": {
+          "type": "string",
+          "description": "A personalized explanation of why the project fits the user."
+        },
+        "techStack": {
+          "type": "string",
+          "description": "A comma-separated list of recommended technologies."
+        },
+        "difficulty": {
+          "type": "string",
+          "description": "The project's difficulty level (e.g., Easy, Medium, Hard)."
+        },
+        "resumeValue": {
+          "type": "string",
+          "description": "A summary of why the project is valuable for a resume."
+        },
+        "roadmap": {
+          "type": "object",
+          "description": "A step-by-step project roadmap.",
+          "properties": {
+            "learn": {
+              "type": "string"
+            },
+            "buildFirst": {
+              "type": "string"
+            },
+            "advanced": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "learn",
+            "buildFirst",
+            "advanced"
+          ]
+        },
+        "isBookmarked": {
+          "type": "boolean",
+          "description": "Indicates if the project is bookmarked by the user."
         }
       },
       "required": [
@@ -129,7 +189,12 @@
         "conversationId",
         "title",
         "description",
-        "order"
+        "order",
+        "whyItMatchesUser",
+        "techStack",
+        "difficulty",
+        "resumeValue",
+        "roadmap"
       ]
     }
   },
