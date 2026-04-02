@@ -5,28 +5,17 @@ import {
   type GenerateProjectRecommendationsOutput,
   type GenerateProjectRecommendationsInput,
 } from "@/ai/flows/generate-project-recommendations-flow";
-import { chat as simpleChat } from "@/ai/flows/simple-chat-flow";
-import type { ChatMessage } from "@/app/page";
+import { chat as simpleChat, type ChatInput } from "@/ai/flows/simple-chat-flow";
 
-// Helper to format the frontend message history for the Genkit flow
-function formatChatHistoryForAI(
-  messages: ChatMessage[]
-): GenerateProjectRecommendationsInput["chatHistory"] {
-  return messages.map((message) => ({
-    role: message.role === "user" ? "user" : "model",
-    parts: [{ text: message.content }],
-  }));
-}
 
 export async function getSimpleChatResponse(
-  messages: ChatMessage[]
+  chatHistory: ChatInput['chatHistory']
 ): Promise<{ data?: string; error?: string }> {
-  if (!messages || messages.length === 0) {
+  if (!chatHistory || chatHistory.length === 0) {
     return { error: "Message history cannot be empty." };
   }
 
   try {
-    const chatHistory = formatChatHistoryForAI(messages);
     const response = await simpleChat({
       chatHistory: chatHistory,
     });
@@ -45,17 +34,16 @@ export async function getSimpleChatResponse(
 }
 
 export async function getProjectRecommendations(
-  messages: ChatMessage[]
+  chatHistory: GenerateProjectRecommendationsInput['chatHistory']
 ): Promise<{
   data?: GenerateProjectRecommendationsOutput;
   error?: string;
 }> {
-  if (!messages || messages.length === 0) {
+  if (!chatHistory || chatHistory.length === 0) {
     return { error: "Message history cannot be empty." };
   }
 
   try {
-    const chatHistory = formatChatHistoryForAI(messages);
     const response = await generateProjectRecommendations({
       chatHistory: chatHistory,
     });

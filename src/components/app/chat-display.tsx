@@ -34,15 +34,15 @@ export function ChatDisplay({ chatHistory, recommendations, isLoading }: ChatDis
        </div>
       ) : (
         <>
-          {chatHistory.map((message, index) => (
+          {chatHistory.map((message) => (
             <div
-              key={index}
+              key={message.id}
               className={cn(
                 "flex items-start gap-3",
-                message.role === "user" ? "justify-end" : "justify-start"
+                message.sender === "user" ? "justify-end" : "justify-start"
               )}
             >
-              {message.role === "assistant" && (
+              {message.sender === "assistant" && (
                 <Avatar className="w-8 h-8">
                   <AvatarFallback>
                     <Bot />
@@ -53,7 +53,7 @@ export function ChatDisplay({ chatHistory, recommendations, isLoading }: ChatDis
               <div
                 className={cn(
                   "p-3 rounded-lg max-w-sm md:max-w-md",
-                  message.role === "user"
+                  message.sender === "user"
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted"
                 )}
@@ -61,7 +61,7 @@ export function ChatDisplay({ chatHistory, recommendations, isLoading }: ChatDis
                 <p className="whitespace-pre-wrap">{message.content}</p>
               </div>
     
-              {message.role === "user" && (
+              {message.sender === "user" && (
                 <Avatar className="w-8 h-8">
                   <AvatarFallback>
                     <User />
