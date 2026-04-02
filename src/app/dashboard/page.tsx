@@ -3,6 +3,7 @@
 
 import { useMemo, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   useFirebase,
   useUser,
@@ -14,11 +15,16 @@ import {
   where,
   limit,
   getDocs,
+  collection,
+  orderBy,
+  Timestamp,
 } from "firebase/firestore";
 import type {
   ProjectRecommendation,
   UserProfileSummary,
+  Conversation,
 } from "@/docs/backend-schema";
+import { formatDistanceToNow } from "date-fns";
 import { Header } from "@/components/app/header";
 import { ProjectCard } from "@/components/app/project-card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -29,9 +35,12 @@ import {
   Paintbrush,
   Star,
   Target,
+  Plus,
+  MessageSquare,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 function DashboardSkeleton() {
@@ -145,6 +154,7 @@ export default function DashboardPage() {
 
   const [userProfile, setUserProfile] = useState<UserProfileSummary | null>(null);
   const [allRecommendations, setAllRecommendations] = useState<WithId<ProjectRecommendation>[]>([]);
+  const [conversations, setConversations] = useState<WithId<Conversation & {updatedAt: Timestamp}>[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(true);
 
   // Auth protection: Redirect if not loading and no real user is logged in.
@@ -183,6 +193,16 @@ export default function DashboardPage() {
           const recs = recsSnapshot.docs.map(doc => ({ ...doc.data() as ProjectRecommendation, id: doc.id }));
           setAllRecommendations(recs);
 
+          // Conversations query
+          const convosQuery = query(
+            collection(firestore, `users/${user.uid}/conversations`),
+            orderBy("updatedAt", "desc"),
+            limit(5)
+          );
+          const convosSnapshot = await getDocs(convosQuery);
+          const convos = convosSnapshot.docs.map(doc => ({ ...(doc.data() as Conversation & {updatedAt: Timestamp}), id: doc.id }));
+          setConversations(convos);
+
         } catch (error) {
           console.error("Error fetching dashboard data:", error);
           // Optionally set an error state here to display a message to the user
@@ -217,11 +237,19 @@ export default function DashboardPage() {
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">
-            Your profile and project recommendations at a glance.
-          </p>
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+            <p className="text-muted-foreground">
+              Your profile and project recommendations at a glance.
+            </p>
+          </div>
+          <Link href="/chat" passHref>
+            <Button size="lg">
+              <Plus className="mr-2 h-4 w-4" />
+              Start New Chat
+            </Button>
+          </Link>
         </div>
 
         {isLoadingData ? (
@@ -290,6 +318,46 @@ export default function DashboardPage() {
             </Card>
           )
         )}
+        
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-xl font-headline">
+              <MessageSquare className="w-5 h-5 text-primary" />
+              Recent Chats
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoadingData ? (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 rounded-lg border"><Skeleton className="h-5 w-48" /> <Skeleton className="h-8 w-20" /></div>
+                <div className="flex items-center justify-between p-3 rounded-lg border"><Skeleton className="h-5 w-48" /> <Skeleton className="h-8 w-20" /></div>
+              </div>
+            ) : conversations.length > 0 ? (
+              <ul className="space-y-2">
+                {conversations.map((convo) => (
+                  <li key={convo.id}>
+                    <Link
+                      href={`/chat?id=${convo.id}`}
+                      className="flex items-center justify-between p-3 rounded-lg hover:bg-accent transition-colors"
+                    >
+                      <div>
+                        <p className="font-medium">Chat Session</p>
+                        <p className="text-sm text-muted-foreground">
+                          {formatDistanceToNow(convo.updatedAt.toDate(), { addSuffix: true })}
+                        </p>
+                      </div>
+                      <span className="text-sm text-primary hover:underline">View &rarr;</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+               <div className="text-center text-muted-foreground py-8">
+                <p>No chat history yet.</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         <Tabs defaultValue="bookmarked" className="w-full">
           <TabsList className="grid w-full grid-cols-2 md:w-[400px]">

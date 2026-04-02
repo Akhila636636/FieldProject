@@ -95,9 +95,9 @@ export default function AuthPage() {
   }, [user, isUserLoading, auth, isRealUser]);
 
   useEffect(() => {
-    // If a "real" user is logged in, redirect them to the chat page.
+    // If a "real" user is logged in, redirect them to the dashboard page.
     if (!isUserLoading && isRealUser) {
-      router.replace("/chat");
+      router.replace("/dashboard");
     }
   }, [isRealUser, isUserLoading, router]);
 
@@ -306,3 +306,5 @@ export default function AuthPage() {
     </div>
   );
 }
+
+    

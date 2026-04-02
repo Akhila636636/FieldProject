@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   getProjectRecommendations,
   getSimpleChatResponse,
@@ -83,8 +83,10 @@ export default function ChatPage() {
   const { firestore } = useFirebase();
   const { user, isUserLoading } = useUser();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
-  const [conversationId, setConversationId] = useState<string | null>(null);
+  const initialConversationId = searchParams.get('id');
+  const [conversationId, setConversationId] = useState<string | null>(initialConversationId);
   const [isChatLoading, setIsChatLoading] = useState(false);
   const [isGenerationLoading, setIsGenerationLoading] = useState(false);
 
@@ -100,7 +102,7 @@ export default function ChatPage() {
     }
   }, [user, isUserLoading, router]);
 
-  // Effect to create a new conversation for the user
+  // Effect to create a new conversation for the user if no ID is in the URL
   useEffect(() => {
     if (user && firestore && !conversationId) {
       const newConversationRef = addDocumentNonBlocking(
@@ -113,11 +115,12 @@ export default function ChatPage() {
       );
       newConversationRef.then((ref) => {
         if (ref) {
+          router.replace(`/chat?id=${ref.id}`, { scroll: false });
           setConversationId(ref.id);
         }
       });
     }
-  }, [user, firestore, conversationId]);
+  }, [user, firestore, conversationId, router]);
 
   // Subscribe to chat messages for the current conversation
   const messagesQuery = useMemoFirebase(
@@ -425,3 +428,5 @@ export default function ChatPage() {
     </div>
   );
 }
+
+    
