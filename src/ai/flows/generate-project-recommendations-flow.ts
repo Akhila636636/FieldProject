@@ -37,7 +37,12 @@ const GenerateProjectRecommendationsOutputSchema = z.object({
       whyItMatchesUser: z.string().describe("A short, personalized explanation of why this specific project is a great match for the user's profile (interests, skills, goals). For example: 'This fits you because you enjoy creative work and are interested in AI.'"),
       techStack: z.string().describe("A comma-separated list of recommended technologies for the project."),
       difficulty: z.string().describe("The project's difficulty level (e.g., Easy, Medium, Hard)."),
-      resumeValue: z.string().describe("A brief summary of why this project would be valuable to feature on a resume.")
+      resumeValue: z.string().describe("A brief summary of why this project would be valuable to feature on a resume."),
+      roadmap: z.object({
+        learn: z.string().describe("First step: what key concepts or technologies the user should learn before starting."),
+        buildFirst: z.string().describe("Second step: the core, minimum viable product (MVP) to build first."),
+        advanced: z.string().describe("Third step: a few ideas for advanced features to add later.")
+      }).describe("A short, beginner-friendly, step-by-step roadmap for the project."),
     })
   ).describe('An array of 3-5 unique, creative, and highly personalized project ideas. Avoid generic suggestions like "todo app" or "blog".'),
 });
@@ -80,6 +85,7 @@ For each project, provide the following details:
 - **techStack**: A comma-separated list of recommended technologies.
 - **difficulty**: The project's difficulty level (e.g., "Easy", "Medium", "Hard").
 - **resumeValue**: Explain why this project would be impressive on a resume and what skills it demonstrates to potential employers.
+- **roadmap**: A short, beginner-friendly, step-by-step roadmap. It should have three parts: 'learn' (what to learn first), 'buildFirst' (the first thing to build), and 'advanced' (ideas for advanced features).
 
 You must respond ONLY with a valid JSON object that conforms to the output schema. Do not include any other text or formatting.
 

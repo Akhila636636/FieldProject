@@ -69,6 +69,7 @@ export function RecommendationsDisplay({ results }: RecommendationsDisplayProps)
               techStack={project.techStack}
               difficulty={project.difficulty}
               resumeValue={project.resumeValue}
+              roadmap={project.roadmap}
             />
           ))}
         </div>
