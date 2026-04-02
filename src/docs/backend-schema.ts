@@ -55,6 +55,18 @@ export type UserProfileSummary = {
    * An array of keywords or phrases representing the specific interests and skills inferred by the AI.
    */
   inferredInterests: string[];
+  /**
+   * An array of user preferences like 'creative' or 'logical'.
+   */
+  preferences?: string[];
+  /**
+   * An array of user goals like 'learn a new language'.
+   */
+  goals?: string[];
+  /**
+   * Timestamp indicating when the summary was last updated.
+   */
+  updatedAt: string;
 };
 export type ProjectRecommendation = {
   /**
@@ -85,5 +97,6 @@ export type ProjectRecommendation = {
     learn: string;
     buildFirst: string;
     advanced: string;
-  }
+  };
+  isBookmarked?: boolean;
 };

@@ -292,6 +292,7 @@ export default function Home() {
         inferredInterests: response.data.interests,
         preferences: response.data.preferences,
         goals: response.data.goals,
+        updatedAt: serverTimestamp(),
       };
       // Since we want to overwrite previous summaries for this conversation, we use a fixed ID.
       setDocumentNonBlocking(
@@ -310,6 +311,7 @@ export default function Home() {
           ownerId: user.uid,
           conversationId: conversationId,
           order: index,
+          isBookmarked: false,
         };
         // Using set with merge to overwrite existing projects if regenerate is clicked
         setDocumentNonBlocking(

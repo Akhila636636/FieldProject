@@ -3,9 +3,13 @@ import { User, Lightbulb, Star, Code, Paintbrush, Target } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProjectCard } from "@/components/app/project-card";
 import { Badge } from "@/components/ui/badge";
+import type { WithId } from "@/firebase";
+import type { ProjectRecommendation } from "@/docs/backend-schema";
 
 type RecommendationsDisplayProps = {
-  results: GenerateProjectRecommendationsOutput;
+  results: Omit<GenerateProjectRecommendationsOutput, 'projects'> & {
+    projects: WithId<ProjectRecommendation>[]
+  }
 };
 
 export function RecommendationsDisplay({ results }: RecommendationsDisplayProps) {
@@ -60,9 +64,11 @@ export function RecommendationsDisplay({ results }: RecommendationsDisplayProps)
           Project Ideas for You
         </h3>
         <div className="grid gap-6 md:grid-cols-1">
-          {results.projects.map((project, index) => (
+          {results.projects.map((project) => (
             <ProjectCard
-              key={index}
+              key={project.id}
+              id={project.id}
+              conversationId={project.conversationId}
               title={project.title}
               description={project.description}
               whyItMatchesUser={project.whyItMatchesUser}
@@ -70,6 +76,7 @@ export function RecommendationsDisplay({ results }: RecommendationsDisplayProps)
               difficulty={project.difficulty}
               resumeValue={project.resumeValue}
               roadmap={project.roadmap}
+              isBookmarked={project.isBookmarked}
             />
           ))}
         </div>
