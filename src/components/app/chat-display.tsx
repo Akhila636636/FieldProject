@@ -42,7 +42,13 @@ export function ChatDisplay({ messages, isLoading }: ChatDisplayProps) {
                 : "bg-muted"
             )}
           >
-            <p className="whitespace-pre-wrap">{message.content}</p>
+            {message.role === 'assistant' ? (
+              <pre className="text-sm bg-transparent rounded-lg">
+                <code className="whitespace-pre-wrap font-code">{message.content}</code>
+              </pre>
+            ) : (
+              <p className="whitespace-pre-wrap">{message.content}</p>
+            )}
           </div>
           {message.role === "user" && (
             <Avatar className="w-8 h-8">

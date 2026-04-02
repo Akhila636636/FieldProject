@@ -40,7 +40,8 @@ export default function Home() {
       });
       setMessages(messages); 
     } else if (response.data) {
-      setMessages([...newMessages, { role: "assistant", content: response.data.response }]);
+      const jsonResponse = JSON.stringify(response.data, null, 2);
+      setMessages([...newMessages, { role: "assistant", content: jsonResponse }]);
     }
   };
 
