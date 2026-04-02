@@ -34,10 +34,12 @@ const GenerateProjectRecommendationsOutputSchema = z.object({
       title: z.string().describe('The title of the project idea.'),
       description:
         z.string().describe('A brief, beginner-friendly description of the project idea.'),
+      whyItMatchesUser: z.string().describe("A short explanation of why this specific project is a great match for the user's profile (interests, skills, goals)."),
       techStack: z.string().describe("A comma-separated list of recommended technologies for the project."),
       difficulty: z.string().describe("The project's difficulty level (e.g., Easy, Medium, Hard)."),
+      resumeValue: z.string().describe("A brief summary of why this project would be valuable to feature on a resume.")
     })
-  ).describe('An array of 3 unique and interesting personalized project ideas based on the entire conversation.'),
+  ).describe('An array of 3-5 unique, creative, and highly personalized project ideas. Avoid generic suggestions like "todo app" or "blog".'),
 });
 export type GenerateProjectRecommendationsOutput = z.infer<
   typeof GenerateProjectRecommendationsOutputSchema
@@ -53,11 +55,31 @@ const projectRecommendationPrompt = ai.definePrompt({
   name: 'projectRecommendationPrompt',
   input: { schema: GenerateProjectRecommendationsInputSchema },
   output: { schema: GenerateProjectRecommendationsOutputSchema },
-  prompt: `You are an AI assistant specialized in recommending programming projects.
-Analyze the entire conversation history provided below to infer the user's technical interests, skill level, preferences (e.g., creative, logical, data-driven), and goals (e.g., build a portfolio, learn a new technology).
-Based on this analysis, propose 3 unique and interesting project ideas that are personalized to the user.
+  prompt: `You are a senior AI career coach that helps developers find the perfect project to build.
 
-If you cannot confidently infer preferences or goals from the conversation, do not include them in the output.
+Your task is to generate highly personalized project recommendations based on a user's conversation history.
+
+**Step 1: Build the User Profile**
+First, analyze the entire \`Conversation History\` to create a detailed user profile. Extract the following information:
+- **interests**: The user's technical interests (e.g., "Web Development", "Machine Learning").
+- **skillLevel**: The user's inferred skill level (e.g., "Beginner", "Intermediate", "Advanced").
+- **preferences**: Inferred user preferences (e.g., "creative", "logical", "design-focused", "data-driven").
+- **goals**: Inferred user goals (e.g., "learn a new language", "build a portfolio piece", "find a job").
+
+If you cannot confidently infer preferences or goals, do not include them.
+
+**Step 2: Generate Project Recommendations**
+Next, using the profile you just built, generate 3 to 5 unique and creative project ideas. These projects must be highly personalized to the user's profile.
+
+**CRITICAL RULE: DO NOT SUGGEST GENERIC PROJECTS.** Avoid ideas like "Todo App," "Blog," "Weather App," or "Simple Calculator" at all costs. The projects must be interesting and demonstrate real-world skills.
+
+For each project, provide the following details:
+- **title**: A catchy title for the project.
+- **description**: A brief description of what the project is.
+- **whyItMatchesUser**: Explain specifically how this project aligns with the user's extracted \`interests\`, \`skillLevel\`, \`preferences\`, and \`goals\`.
+- **techStack**: A comma-separated list of recommended technologies.
+- **difficulty**: The project's difficulty level (e.g., "Easy", "Medium", "Hard").
+- **resumeValue**: Explain why this project would be impressive on a resume and what skills it demonstrates to potential employers.
 
 You must respond ONLY with a valid JSON object that conforms to the output schema. Do not include any other text or formatting.
 

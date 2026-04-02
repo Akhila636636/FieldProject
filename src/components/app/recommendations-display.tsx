@@ -59,14 +59,16 @@ export function RecommendationsDisplay({ results }: RecommendationsDisplayProps)
           <Lightbulb className="w-6 h-6 text-primary" />
           Project Ideas for You
         </h3>
-        <div className="grid gap-4 md:grid-cols-1">
+        <div className="grid gap-6 md:grid-cols-1">
           {results.projects.map((project, index) => (
             <ProjectCard
               key={index}
               title={project.title}
               description={project.description}
+              whyItMatchesUser={project.whyItMatchesUser}
               techStack={project.techStack}
               difficulty={project.difficulty}
+              resumeValue={project.resumeValue}
             />
           ))}
         </div>
