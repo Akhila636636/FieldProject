@@ -1,13 +1,11 @@
 
 "use client";
 
-import { useMemo, useEffect } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   useFirebase,
   useUser,
-  useMemoFirebase,
-  useCollection,
   WithId,
 } from "@/firebase";
 import {
@@ -15,6 +13,7 @@ import {
   query,
   where,
   limit,
+  getDocs,
 } from "firebase/firestore";
 import type {
   ProjectRecommendation,
@@ -144,6 +143,10 @@ export default function DashboardPage() {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
 
+  const [userProfile, setUserProfile] = useState<UserProfileSummary | null>(null);
+  const [allRecommendations, setAllRecommendations] = useState<WithId<ProjectRecommendation>[]>([]);
+  const [isLoadingData, setIsLoadingData] = useState(true);
+
   // Auth protection: Redirect if not loading and no real user is logged in.
   useEffect(() => {
     // A "real" user has a provider (e.g., password, google.com), not an anonymous one.
@@ -153,38 +156,50 @@ export default function DashboardPage() {
     }
   }, [user, isUserLoading, router]);
 
-  // Query for the user's most recent profile summary
-  const profileQuery = useMemoFirebase(
-    () =>
-      user && firestore
-        ? query(
+  useEffect(() => {
+    // Only run queries if we have a real user and firestore is available
+    if (user && user.providerData.length > 0 && firestore) {
+      setIsLoadingData(true);
+      const fetchDashboardData = async () => {
+        try {
+          // Profile query
+          const profileQuery = query(
             collectionGroup(firestore, "profileSummaries"),
             where("ownerId", "==", user.uid),
             limit(1)
-          )
-        : null,
-    [user, firestore]
-  );
-  const { data: profileSummaries, isLoading: isLoadingProfile } =
-    useCollection<UserProfileSummary>(profileQuery);
-  const userProfile = profileSummaries?.[0];
+          );
+          const profileSnapshot = await getDocs(profileQuery);
+          if (!profileSnapshot.empty) {
+            setUserProfile(profileSnapshot.docs[0].data() as UserProfileSummary);
+          }
 
-  // Query for all project recommendations for the user
-  const recommendationsQuery = useMemoFirebase(
-    () =>
-      user && firestore
-        ? query(
+          // Recommendations query
+          const recommendationsQuery = query(
             collectionGroup(firestore, "projectRecommendations"),
             where("ownerId", "==", user.uid)
-          )
-        : null,
-    [user, firestore]
-  );
-  const { data: allRecommendations, isLoading: isLoadingRecs } =
-    useCollection<WithId<ProjectRecommendation>>(recommendationsQuery);
+          );
+          const recsSnapshot = await getDocs(recommendationsQuery);
+          const recs = recsSnapshot.docs.map(doc => ({ ...doc.data() as ProjectRecommendation, id: doc.id }));
+          setAllRecommendations(recs);
+
+        } catch (error) {
+          console.error("Error fetching dashboard data:", error);
+          // Optionally set an error state here to display a message to the user
+        } finally {
+          setIsLoadingData(false);
+        }
+      };
+
+      fetchDashboardData();
+    } else if (!isUserLoading) {
+      // If there's no user and we are not loading the user, there's no data to fetch.
+      setIsLoadingData(false);
+    }
+  }, [user, firestore, isUserLoading]);
+
 
   const sortedRecommendations = useMemo(
-    () => allRecommendations?.sort((a, b) => a.order - b.order) || [],
+    () => [...allRecommendations].sort((a, b) => a.order - b.order) || [],
     [allRecommendations]
   );
 
@@ -193,7 +208,7 @@ export default function DashboardPage() {
     [sortedRecommendations]
   );
 
-  if (isUserLoading || !user || user.providerData.length === 0) {
+  if (isUserLoading) {
     return <DashboardSkeleton />;
   }
 
@@ -208,7 +223,7 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        {isLoadingProfile ? (
+        {isLoadingData ? (
           <ProfileSkeleton />
         ) : userProfile ? (
           <Card className="mb-8 bg-card/50">
@@ -268,7 +283,7 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         ) : (
-          !isLoadingProfile && (
+          !isLoadingData && (
             <Card className="mb-8 text-center text-muted-foreground py-12">
               <p>Your profile will appear here after you chat with the AI.</p>
             </Card>
@@ -283,10 +298,10 @@ export default function DashboardPage() {
             <TabsTrigger value="all">All Recommendations</TabsTrigger>
           </TabsList>
           <TabsContent value="bookmarked" className="mt-6">
-             <ProjectsGrid projects={bookmarkedProjects} isLoading={isLoadingRecs} />
+             <ProjectsGrid projects={bookmarkedProjects} isLoading={isLoadingData} />
           </TabsContent>
           <TabsContent value="all" className="mt-6">
-            <ProjectsGrid projects={sortedRecommendations || []} isLoading={isLoadingRecs} />
+            <ProjectsGrid projects={sortedRecommendations || []} isLoading={isLoadingData} />
           </TabsContent>
         </Tabs>
       </main>

@@ -6,30 +6,36 @@ service cloud.firestore {
 
     // Helper function to check ownership
     function isOwner(userId) {
-      return request.auth.uid == userId;
+      return request.auth != null && request.auth.uid == userId;
     }
     
-    // Rules for user-specific data nested under /users/{userId}
-    // This covers chat messages, and specific conversation data.
+    // This allows a user to access documents directly within their own user path.
+    // e.g., get(/users/{userId}/conversations/{convoId})
     match /users/{userId}/{document=**} {
       allow read, write: if isOwner(userId);
     }
     
-    // Rules for collection group queries.
-    // These need to be separate to allow 'list' operations across all conversations for a user.
-    // The actual security is enforced by the 'where("ownerId", "==", userId)' clause in the client query.
+    // These rules are required to enable cross-document (collectionGroup) queries.
+    // Firestore security rules for "list" (queries) cannot access resource.data.
+    // Therefore, security must be enforced in the client-side query using a `where` clause.
+    // We still check if the user is signed in as a basic security measure.
     
     match /{path=**}/profileSummaries/{summaryId} {
-      // Allow a user to list summaries they own.
+      // Allow a user to list summaries they own via a query like:
+      // query(collectionGroup(db, 'profileSummaries'), where('ownerId', '==', auth.currentUser.uid))
       allow list: if request.auth != null;
+      
       // Allow a user to get a specific summary if they own it.
+      // This is a stronger rule for direct document access.
       allow get: if isOwner(resource.data.ownerId);
     }
     
     match /{path=**}/projectRecommendations/{recommendationId} {
-      // Allow a user to list recommendations they own.
+      // Allow a user to list recommendations they own via a query like:
+      // query(collectionGroup(db, 'projectRecommendations'), where('ownerId', '==', auth.currentUser.uid))
       allow list: if request.auth != null;
-       // Allow a user to get a specific recommendation if they own it.
+
+      // Allow a user to get a specific recommendation if they own it.
       allow get: if isOwner(resource.data.ownerId);
     }
   }
