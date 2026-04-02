@@ -282,6 +282,12 @@ export default function ChatPage() {
 
     setIsGenerationLoading(true);
 
+    const bookmarkedProjectsQuery = query(
+      collectionGroup(firestore, "projectRecommendations"),
+      where("ownerId", "==", user.uid),
+      where("isBookmarked", "==", true)
+    );
+    
     // Temporarily disabling bookmark-based recommendations to debug permissions error.
     const bookmarkedProjects: string[] = [];
 
@@ -332,8 +338,8 @@ export default function ChatPage() {
         conversationId: conversationId,
         summaryText: response.data.skillLevel,
         inferredInterests: response.data.interests,
-        preferences: response.data.preferences,
-        goals: response.data.goals,
+        preferences: response.data.preferences || [],
+        goals: response.data.goals || [],
         updatedAt: serverTimestamp(),
       };
       // Since we want to overwrite previous summaries for this conversation, we use a fixed ID.
