@@ -1,7 +1,8 @@
 
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   useFirebase,
   useUser,
@@ -30,10 +31,43 @@ import {
   Paintbrush,
   Star,
   Target,
+  Loader2
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+function DashboardSkeleton() {
+  return (
+    <div className="flex flex-col min-h-screen bg-background">
+      <Header />
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-8">
+        <div className="mb-8">
+          <Skeleton className="h-8 w-64 mb-2" />
+          <Skeleton className="h-5 w-96" />
+        </div>
+        <ProfileSkeleton />
+        <div className="space-y-4 mt-8">
+          <Skeleton className="h-10 w-[400px]" />
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {[...Array(3)].map((_, i) => (
+                <Card key={i}>
+                  <CardHeader>
+                    <Skeleton className="h-5 w-3/4" />
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-1/2" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+        </div>
+      </main>
+    </div>
+  );
+}
 
 function ProfileSkeleton() {
   return (
@@ -59,7 +93,26 @@ function ProfileSkeleton() {
   );
 }
 
-function ProjectsGrid({ projects }: { projects: WithId<ProjectRecommendation>[] }) {
+function ProjectsGrid({ projects, isLoading }: { projects: WithId<ProjectRecommendation>[], isLoading: boolean }) {
+  if (isLoading) {
+    return (
+       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {[...Array(3)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader>
+                <Skeleton className="h-5 w-3/4" />
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-1/2" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+    )
+  }
+
   if (projects.length === 0) {
     return (
       <div className="text-center text-muted-foreground py-12">
@@ -90,7 +143,15 @@ function ProjectsGrid({ projects }: { projects: WithId<ProjectRecommendation>[] 
 
 export default function DashboardPage() {
   const { firestore } = useFirebase();
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
+  const router = useRouter();
+
+  // Auth protection
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.replace('/');
+    }
+  }, [user, isUserLoading, router]);
 
   // Query for the user's most recent profile summary
   const profileQuery = useMemoFirebase(
@@ -128,6 +189,10 @@ export default function DashboardPage() {
     () => allRecommendations?.filter((p) => p.isBookmarked) || [],
     [allRecommendations]
   );
+
+  if (isUserLoading || !user) {
+    return <DashboardSkeleton />;
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -215,23 +280,13 @@ export default function DashboardPage() {
             <TabsTrigger value="all">All Recommendations</TabsTrigger>
           </TabsList>
           <TabsContent value="bookmarked" className="mt-6">
-            {isLoadingRecs ? (
-              <p>Loading bookmarked projects...</p>
-            ) : (
-              <ProjectsGrid projects={bookmarkedProjects} />
-            )}
+             <ProjectsGrid projects={bookmarkedProjects} isLoading={isLoadingRecs} />
           </TabsContent>
           <TabsContent value="all" className="mt-6">
-            {isLoadingRecs ? (
-              <p>Loading all recommendations...</p>
-            ) : (
-              <ProjectsGrid projects={allRecommendations || []} />
-            )}
+            <ProjectsGrid projects={allRecommendations || []} isLoading={isLoadingRecs} />
           </TabsContent>
         </Tabs>
       </main>
     </div>
   );
 }
-
-    
