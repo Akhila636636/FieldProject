@@ -25,7 +25,7 @@ export function ProjectCard({ title, description, whyItMatchesUser, techStack, d
       <CardContent className="flex-grow space-y-4">
         <div className="space-y-2 p-3 bg-background/50 rounded-md border">
           <h4 className="font-semibold flex items-center gap-2 text-sm"><Heart className="w-4 h-4 text-primary" /> Why it's a good match</h4>
-          <p className="text-muted-foreground text-sm">{whyItMatchesUser}</p>
+          <p className="text-sm">{whyItMatchesUser}</p>
         </div>
 
         <div className="space-y-2 p-3 bg-background/50 rounded-md border">

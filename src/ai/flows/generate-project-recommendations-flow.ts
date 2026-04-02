@@ -34,7 +34,7 @@ const GenerateProjectRecommendationsOutputSchema = z.object({
       title: z.string().describe('The title of the project idea.'),
       description:
         z.string().describe('A brief, beginner-friendly description of the project idea.'),
-      whyItMatchesUser: z.string().describe("A short explanation of why this specific project is a great match for the user's profile (interests, skills, goals)."),
+      whyItMatchesUser: z.string().describe("A short, personalized explanation of why this specific project is a great match for the user's profile (interests, skills, goals). For example: 'This fits you because you enjoy creative work and are interested in AI.'"),
       techStack: z.string().describe("A comma-separated list of recommended technologies for the project."),
       difficulty: z.string().describe("The project's difficulty level (e.g., Easy, Medium, Hard)."),
       resumeValue: z.string().describe("A brief summary of why this project would be valuable to feature on a resume.")
@@ -76,7 +76,7 @@ Next, using the profile you just built, generate 3 to 5 unique and creative proj
 For each project, provide the following details:
 - **title**: A catchy title for the project.
 - **description**: A brief description of what the project is.
-- **whyItMatchesUser**: Explain specifically how this project aligns with the user's extracted \`interests\`, \`skillLevel\`, \`preferences\`, and \`goals\`.
+- **whyItMatchesUser**: Write a short, personalized explanation for why this project is a great match. Directly reference the user's profile. For example: "This project is perfect for you because you have a preference for creative work and an interest in AI."
 - **techStack**: A comma-separated list of recommended technologies.
 - **difficulty**: The project's difficulty level (e.g., "Easy", "Medium", "Hard").
 - **resumeValue**: Explain why this project would be impressive on a resume and what skills it demonstrates to potential employers.
