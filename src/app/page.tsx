@@ -31,6 +31,8 @@ import {
   orderBy,
   doc,
   serverTimestamp,
+  collectionGroup,
+  where,
 } from "firebase/firestore";
 import type { ProjectRecommendation } from "@/docs/backend-schema";
 
@@ -81,7 +83,7 @@ export default function Home() {
     }
   }, [user, firestore, conversationId]);
 
-  // Subscribe to chat messages
+  // Subscribe to chat messages for the current conversation
   const messagesQuery = useMemoFirebase(
     () =>
       user && conversationId && firestore
@@ -98,7 +100,7 @@ export default function Home() {
   const { data: chatHistory, isLoading: isMessagesLoading } =
     useCollection<ChatMessage>(messagesQuery);
 
-  // Subscribe to profile summaries
+  // Subscribe to profile summaries for the current conversation
   const profileQuery = useMemoFirebase(
     () =>
       user && conversationId && firestore
@@ -113,7 +115,7 @@ export default function Home() {
   );
   const { data: profileSummaries } = useCollection<any>(profileQuery);
 
-  // Subscribe to project recommendations
+  // Subscribe to project recommendations for the current conversation
   const recommendationsQuery = useMemoFirebase(
     () =>
       user && conversationId && firestore
@@ -129,6 +131,20 @@ export default function Home() {
   );
   const { data: projectRecommendations } =
     useCollection<WithId<ProjectRecommendation>>(recommendationsQuery);
+    
+  // Query for ALL project recommendations for the user to find bookmarks
+  const allRecommendationsQuery = useMemoFirebase(
+    () =>
+      user && firestore
+        ? query(
+            collectionGroup(firestore, "projectRecommendations"),
+            where("ownerId", "==", user.uid)
+          )
+        : null,
+    [user, firestore]
+  );
+  const { data: allRecommendations } =
+    useCollection<WithId<ProjectRecommendation>>(allRecommendationsQuery);
 
   // Construct the full recommendations object for the UI
   const recommendations = useMemo<GenerateProjectRecommendationsOutput | null>(() => {
@@ -243,9 +259,14 @@ export default function Home() {
       return;
 
     setIsGenerationLoading(true);
+
+    const bookmarkedProjects = allRecommendations
+      ?.filter((p) => p.isBookmarked)
+      .map((p) => `${p.title} (Tech: ${p.techStack})`);
     
     const response = await getProjectRecommendations(
-      formatChatHistoryForAI(chatHistory)
+      formatChatHistoryForAI(chatHistory),
+      bookmarkedProjects || []
     );
 
     if (response.error) {
@@ -369,5 +390,3 @@ export default function Home() {
     </div>
   );
 }
-
-    

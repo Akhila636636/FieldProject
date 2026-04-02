@@ -19,6 +19,7 @@ const GenerateProjectRecommendationsInputSchema = z.object({
   chatHistory: z
     .array(MessageSchema)
     .describe('The full conversation history between the user and the AI.'),
+  bookmarkedProjects: z.array(z.string()).optional().describe('A list of projects the user has previously bookmarked, formatted as "Title (Tech: ...)"'),
 });
 export type GenerateProjectRecommendationsInput = z.infer<
   typeof GenerateProjectRecommendationsInputSchema
@@ -75,6 +76,14 @@ If you cannot confidently infer preferences or goals, do not include them.
 
 **Step 2: Generate Project Recommendations**
 Next, using the profile you just built, generate 3 to 5 unique and creative project ideas. These projects must be highly personalized to the user's profile.
+
+{{#if bookmarkedProjects.length}}
+**Previously Bookmarked Projects:**
+The user has previously shown strong interest in these projects. Use these as a strong signal for their preferences and slightly adjust your new recommendations to align with similar themes, technologies, or project types.
+{{#each bookmarkedProjects}}
+- {{this}}
+{{/each}}
+{{/if}}
 
 **CRITICAL RULE: DO NOT SUGGEST GENERIC PROJECTS.** Avoid ideas like "Todo App," "Blog," "Weather App," or "Simple Calculator" at all costs. The projects must be interesting and demonstrate real-world skills.
 

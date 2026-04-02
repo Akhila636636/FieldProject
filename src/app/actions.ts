@@ -34,7 +34,8 @@ export async function getSimpleChatResponse(
 }
 
 export async function getProjectRecommendations(
-  chatHistory: GenerateProjectRecommendationsInput['chatHistory']
+  chatHistory: GenerateProjectRecommendationsInput['chatHistory'],
+  bookmarkedProjects: string[]
 ): Promise<{
   data?: GenerateProjectRecommendationsOutput;
   error?: string;
@@ -46,6 +47,7 @@ export async function getProjectRecommendations(
   try {
     const response = await generateProjectRecommendations({
       chatHistory: chatHistory,
+      bookmarkedProjects: bookmarkedProjects,
     });
 
     if (!response || !response.projects || response.projects.length === 0) {
