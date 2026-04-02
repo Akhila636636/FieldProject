@@ -1,6 +1,5 @@
 "use server";
 
-import { understandUserInterests } from "@/ai/flows/understand-user-interests";
 import {
   generateProjectRecommendations,
   type GenerateProjectRecommendationsOutput,
@@ -17,19 +16,11 @@ export async function getRecommendations(
   }
 
   try {
-    const userInterests = await understandUserInterests({ userMessage: message });
-
-    const interestsString = `The user describes themselves as a ${
-      userInterests.inferredExperienceLevel
-    }. Their interests include: ${userInterests.inferredInterests.join(
-      ", "
-    )}. They have the following skills: ${userInterests.inferredSkills.join(", ")}.`;
-
     const recommendations = await generateProjectRecommendations({
-      interests: interestsString,
+      userMessage: message,
     });
 
-    if (!recommendations.userProfile || recommendations.projectIdeas.length === 0) {
+    if (!recommendations.projects || recommendations.projects.length === 0) {
       return { error: "Could not generate recommendations based on your input. Please try being more specific." };
     }
 
