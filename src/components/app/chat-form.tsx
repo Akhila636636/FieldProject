@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -49,7 +50,7 @@ export function ChatForm({ onSubmit, isLoading }: ChatFormProps) {
             <FormItem className="flex-1">
               <FormControl>
                 <Textarea
-                  placeholder="Tell me about your skills and interests..."
+                  placeholder="Tell me about your skills and interests to get project ideas..."
                   className="resize-none"
                   rows={1}
                   {...field}
