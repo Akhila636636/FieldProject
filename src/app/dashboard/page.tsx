@@ -184,7 +184,7 @@ export default function DashboardPage() {
     useCollection<WithId<ProjectRecommendation>>(recommendationsQuery);
 
   const sortedRecommendations = useMemo(
-    () => allRecommendations?.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0)).sort((a,b) => a.order - b.order) || [],
+    () => allRecommendations?.sort((a, b) => a.order - b.order) || [],
     [allRecommendations]
   );
 
