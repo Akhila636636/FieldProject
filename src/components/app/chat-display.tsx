@@ -1,10 +1,12 @@
-import type { ChatMessage } from "@/app/page";
+
+import type { ChatMessage } from "@/app/chat/page";
 import type { GenerateProjectRecommendationsOutput } from "@/ai/flows/generate-project-recommendations-flow";
 import { cn } from "@/lib/utils";
 import { Bot, Loader2, User } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { RecommendationsDisplay } from "@/components/app/recommendations-display";
 import { Lightbulb } from "lucide-react";
+import { useEffect, useRef } from "react";
 
 type ChatDisplayProps = {
   chatHistory: ChatMessage[];
@@ -14,6 +16,12 @@ type ChatDisplayProps = {
 
 export function ChatDisplay({ chatHistory, recommendations, isLoading }: ChatDisplayProps) {
   const showWelcomeMessage = chatHistory.length === 0 && !recommendations && !isLoading;
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatHistory, recommendations, isLoading]);
+
 
   return (
     <div className="space-y-6">
@@ -91,6 +99,7 @@ export function ChatDisplay({ chatHistory, recommendations, isLoading }: ChatDis
           </div>
         </div>
       )}
+      <div ref={messagesEndRef} />
     </div>
   );
 }

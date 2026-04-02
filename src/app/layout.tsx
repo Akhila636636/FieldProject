@@ -28,7 +28,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="font-body antialiased h-full bg-background overflow-hidden">
+      <body className="font-body antialiased h-full bg-background">
         <FirebaseClientProvider>
           {children}
         </FirebaseClientProvider>

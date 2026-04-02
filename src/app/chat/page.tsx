@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   getProjectRecommendations,
@@ -91,7 +91,6 @@ export default function ChatPage() {
   const [isGenerationLoading, setIsGenerationLoading] = useState(false);
 
   const { toast } = useToast();
-  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   // Auth protection: Redirect if not loading and no real user is logged in.
   useEffect(() => {
@@ -186,14 +185,6 @@ export default function ChatPage() {
       projects: projectRecommendations,
     };
   }, [profileSummaries, projectRecommendations]);
-
-
-  useEffect(() => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop =
-        chatContainerRef.current.scrollHeight;
-    }
-  }, [chatHistory, recommendations, isChatLoading]);
 
   const userMessageCount =
     chatHistory?.filter((msg) => msg.sender === "user").length || 0;
@@ -390,7 +381,6 @@ export default function ChatPage() {
     <div className="flex flex-col h-screen bg-background">
       <Header />
       <main
-        ref={chatContainerRef}
         className="flex-1 w-full max-w-3xl mx-auto px-4 py-8 overflow-y-auto"
       >
         <ChatDisplay
@@ -428,5 +418,3 @@ export default function ChatPage() {
     </div>
   );
 }
-
-    
