@@ -173,10 +173,11 @@ export default function DashboardPage() {
             setUserProfile(profileSnapshot.docs[0].data() as UserProfileSummary);
           }
 
-          // Recommendations query
+          // Recommendations query. Using 'in' operator to leverage the composite index.
           const recommendationsQuery = query(
             collectionGroup(firestore, "projectRecommendations"),
-            where("ownerId", "==", user.uid)
+            where("ownerId", "==", user.uid),
+            where("isBookmarked", "in", [true, false])
           );
           const recsSnapshot = await getDocs(recommendationsQuery);
           const recs = recsSnapshot.docs.map(doc => ({ ...doc.data() as ProjectRecommendation, id: doc.id }));
@@ -308,3 +309,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
