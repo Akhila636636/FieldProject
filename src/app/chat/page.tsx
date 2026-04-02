@@ -167,19 +167,6 @@ export default function ChatPage() {
   const { data: projectRecommendations } =
     useCollection<WithId<ProjectRecommendation>>(recommendationsQuery);
 
-  // Query for ALL project recommendations for the user to find bookmarks
-  const allRecommendationsQuery = useMemoFirebase(
-    () =>
-      user && firestore
-        ? query(
-            collectionGroup(firestore, "projectRecommendations"),
-            where("ownerId", "==", user.uid)
-          )
-        : null,
-    [user, firestore]
-  );
-  const { data: allRecommendations } =
-    useCollection<WithId<ProjectRecommendation>>(allRecommendationsQuery);
 
   // Construct the full recommendations object for the UI
   const recommendations = useMemo<GenerateProjectRecommendationsOutput | null>(() => {
@@ -295,13 +282,12 @@ export default function ChatPage() {
 
     setIsGenerationLoading(true);
 
-    const bookmarkedProjects = allRecommendations
-      ?.filter((p) => p.isBookmarked)
-      .map((p) => `${p.title} (Tech: ${p.techStack})`);
+    // Temporarily disabling bookmark-based recommendations to debug permissions error.
+    const bookmarkedProjects: string[] = [];
 
     const response = await getProjectRecommendations(
       formatChatHistoryForAI(chatHistory),
-      bookmarkedProjects || []
+      bookmarkedProjects
     );
 
     if (response.error) {
