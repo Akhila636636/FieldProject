@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useRef, useEffect } from "react";
@@ -30,9 +29,10 @@ export default function Home() {
 
   const handleSubmit = async (message: string) => {
     setIsLoading(true);
-    setMessages((prev) => [...prev, { role: "user", content: message }]);
+    const newMessages: Message[] = [...messages, { role: "user", content: message }];
+    setMessages(newMessages);
 
-    const response = await getProjectRecommendations(message);
+    const response = await getProjectRecommendations(newMessages);
 
     setIsLoading(false);
     if (response.error) {
