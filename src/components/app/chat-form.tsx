@@ -15,8 +15,8 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 
 const formSchema = z.object({
-  message: z.string().min(10, {
-    message: "Please tell us a bit more about your interests (at least 10 characters).",
+  message: z.string().min(1, {
+    message: "Message cannot be empty.",
   }),
 });
 
@@ -34,41 +34,44 @@ export function ChatForm({ onSubmit, isLoading }: ChatFormProps) {
   });
 
   const handleFormSubmit = (values: z.infer<typeof formSchema>) => {
+    if (isLoading || !values.message.trim()) return;
     onSubmit(values.message);
+    form.reset();
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="flex items-start gap-2">
         <FormField
           control={form.control}
           name="message"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="flex-1">
               <FormControl>
                 <Textarea
-                  placeholder="e.g., 'I'm new to coding and interested in web development. I've played around with HTML and CSS, and want to learn JavaScript.'"
+                  placeholder="Type your message here..."
                   className="resize-none"
-                  rows={4}
+                  rows={1}
                   {...field}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      form.handleSubmit(handleFormSubmit)();
+                    }
+                  }}
                 />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        <Button type="submit" disabled={isLoading} className="w-full sm:w-auto">
+        <Button type="submit" disabled={isLoading} size="icon">
           {isLoading ? (
-            <>
-              <Loader2 className="animate-spin" />
-              Generating...
-            </>
+            <Loader2 className="animate-spin" />
           ) : (
-            <>
-              <Send />
-              Get Recommendations
-            </>
+            <Send />
           )}
+           <span className="sr-only">Send</span>
         </Button>
       </form>
     </Form>

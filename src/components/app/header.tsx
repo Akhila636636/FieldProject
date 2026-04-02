@@ -6,7 +6,7 @@ export function Header() {
       <div className="max-w-7xl mx-auto flex items-center gap-2">
         <Bot className="w-6 h-6 text-primary" />
         <h1 className="text-xl font-semibold tracking-tight font-headline">
-          DevPath
+          Simple Chat
         </h1>
       </div>
     </header>

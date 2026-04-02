@@ -1,14 +1,11 @@
 "use server";
 
-import {
-  generateProjectRecommendations,
-  type GenerateProjectRecommendationsOutput,
-} from "@/ai/flows/generate-project-recommendations-flow";
+import { chat, type ChatOutput } from "@/ai/flows/simple-chat-flow";
 
-export async function getRecommendations(
+export async function getChatResponse(
   message: string
 ): Promise<{
-  data?: GenerateProjectRecommendationsOutput;
+  data?: ChatOutput;
   error?: string;
 }> {
   if (!message || message.trim().length === 0) {
@@ -16,17 +13,17 @@ export async function getRecommendations(
   }
 
   try {
-    const recommendations = await generateProjectRecommendations({
-      userMessage: message,
+    const response = await chat({
+      message: message,
     });
 
-    if (!recommendations.projects || recommendations.projects.length === 0) {
-      return { error: "Could not generate recommendations based on your input. Please try being more specific." };
+    if (!response.response) {
+      return { error: "The AI did not return a response." };
     }
 
-    return { data: recommendations };
+    return { data: response };
   } catch (e) {
-    console.error("Error getting recommendations:", e);
+    console.error("Error getting chat response:", e);
     return {
       error: "An unexpected error occurred while communicating with the AI. Please try again later.",
     };

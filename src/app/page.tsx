@@ -1,62 +1,58 @@
 "use client";
 
-import { useState } from "react";
-import type { GenerateProjectRecommendationsOutput } from "@/ai/flows/generate-project-recommendations-flow";
-import { getRecommendations } from "@/app/actions";
+import { useState, useEffect, useRef } from "react";
+import { getChatResponse } from "@/app/actions";
 import { Header } from "@/components/app/header";
 import { ChatForm } from "@/components/app/chat-form";
-import { LoadingSkeleton } from "@/components/app/loading-skeleton";
-import { RecommendationsDisplay } from "@/components/app/recommendations-display";
 import { useToast } from "@/hooks/use-toast";
+import { ChatDisplay } from "@/components/app/chat-display";
+
+export type Message = {
+  role: "user" | "assistant";
+  content: string;
+};
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
-  const [results, setResults] = useState<GenerateProjectRecommendationsOutput | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
   const { toast } = useToast();
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [messages, isLoading]);
 
   const handleSubmit = async (message: string) => {
     setIsLoading(true);
-    setResults(null);
+    const newMessages: Message[] = [...messages, { role: "user", content: message }];
+    setMessages(newMessages);
 
-    const response = await getRecommendations(message);
+    const response = await getChatResponse(message);
 
+    setIsLoading(false);
     if (response.error) {
       toast({
         variant: "destructive",
         title: "Oh no! Something went wrong.",
         description: response.error,
       });
+      setMessages(messages); 
     } else if (response.data) {
-      setResults(response.data);
+      setMessages([...newMessages, { role: "assistant", content: response.data.response }]);
     }
-    setIsLoading(false);
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col h-screen bg-background">
       <Header />
-      <main className="flex-1 w-full max-w-3xl mx-auto px-4 py-8 md:py-12">
-        <div className="flex flex-col gap-8">
-          <div className="text-center space-y-2">
-            <h2 className="text-3xl font-bold tracking-tight font-headline">
-              Find Your Next Project
-            </h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">
-              Describe your coding interests, skills, or what you want to learn, and our AI will suggest the perfect starter projects for you.
-            </p>
-          </div>
-
-          <ChatForm onSubmit={handleSubmit} isLoading={isLoading} />
-
-          <div className="animate-in fade-in duration-500">
-            {isLoading && <LoadingSkeleton />}
-            {results && <RecommendationsDisplay results={results} />}
-          </div>
-        </div>
+      <main ref={chatContainerRef} className="flex-1 w-full max-w-3xl mx-auto px-4 pt-4 pb-4 overflow-y-auto">
+        <ChatDisplay messages={messages} isLoading={isLoading} />
       </main>
-      <footer className="py-4 text-center text-sm text-muted-foreground">
-        <p>Powered by DevPath</p>
-      </footer>
+      <div className="w-full max-w-3xl mx-auto px-4 pb-4 pt-2 bg-background">
+         <ChatForm onSubmit={handleSubmit} isLoading={isLoading} />
+      </div>
     </div>
   );
 }
