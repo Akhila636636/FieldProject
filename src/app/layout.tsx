@@ -3,8 +3,8 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'Simple Chat',
-  description: 'A simple chat application built with Next.js and Gemini.',
+  title: 'Project Idea Generator',
+  description: 'Generate personalized project ideas using AI.',
 };
 
 export default function RootLayout({
