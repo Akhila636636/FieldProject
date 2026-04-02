@@ -147,7 +147,8 @@ service cloud.firestore {
      * @principle Enforces ownership and validates relational integrity between a child (Summary) and parent (Conversation) document.
      */
     match /users/{userId}/conversations/{conversationId}/profileSummaries/{profileSummaryId} {
-      allow get, list: if isOwner(userId);
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
       allow create: if isOwner(userId) && hasCorrectOwnerId(userId) && hasCorrectParentId(conversationId);
       allow update: if isExistingOwner(userId) && immutableFieldsAreUnchanged();
       allow delete: if isExistingOwner(userId);
@@ -161,7 +162,8 @@ service cloud.firestore {
      * @principle Enforces ownership and validates relational integrity between a child (Recommendation) and parent (Conversation) document.
      */
     match /users/{userId}/conversations/{conversationId}/projectRecommendations/{projectRecommendationId} {
-      allow get, list: if isOwner(userId);
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
       allow create: if isOwner(userId) && hasCorrectOwnerId(userId) && hasCorrectParentId(conversationId);
       allow update: if isExistingOwner(userId) && immutableFieldsAreUnchanged();
       allow delete: if isExistingOwner(userId);
