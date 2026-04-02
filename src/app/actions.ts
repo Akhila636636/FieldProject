@@ -5,6 +5,7 @@ import {
   type GenerateProjectRecommendationsOutput,
   type GenerateProjectRecommendationsInput,
 } from "@/ai/flows/generate-project-recommendations-flow";
+import { chat as simpleChat } from "@/ai/flows/simple-chat-flow";
 import type { ChatMessage } from "@/app/page";
 
 // Helper to format the frontend message history for the Genkit flow
@@ -15,6 +16,32 @@ function formatChatHistoryForAI(
     role: message.role === "user" ? "user" : "model",
     parts: [{ text: message.content }],
   }));
+}
+
+export async function getSimpleChatResponse(
+  messages: ChatMessage[]
+): Promise<{ data?: string; error?: string }> {
+  if (!messages || messages.length === 0) {
+    return { error: "Message history cannot be empty." };
+  }
+
+  try {
+    const chatHistory = formatChatHistoryForAI(messages);
+    const response = await simpleChat({
+      chatHistory: chatHistory,
+    });
+
+    if (!response || !response.response) {
+      return { error: "The AI did not return a response." };
+    }
+
+    return { data: response.response };
+  } catch (e) {
+    console.error("Error getting chat response:", e);
+    return {
+      error: "An unexpected error occurred while communicating with the AI. Please try again later.",
+    };
+  }
 }
 
 export async function getProjectRecommendations(
