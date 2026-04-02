@@ -1,5 +1,5 @@
 import type { GenerateProjectRecommendationsOutput } from "@/ai/flows/generate-project-recommendations-flow";
-import { User, Lightbulb, Star, Code } from "lucide-react";
+import { User, Lightbulb, Star, Code, Paintbrush, Target } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProjectCard } from "@/components/app/project-card";
 import { Badge } from "@/components/ui/badge";
@@ -31,6 +31,26 @@ export function RecommendationsDisplay({ results }: RecommendationsDisplayProps)
                     ))}
                 </div>
             </div>
+            {results.preferences && results.preferences.length > 0 && (
+              <div>
+                  <h4 className="font-semibold mb-2 flex items-center gap-2"><Paintbrush className="w-4 h-4 text-primary" /> Preferences</h4>
+                  <div className="flex flex-wrap gap-2">
+                      {results.preferences.map(preference => (
+                          <Badge key={preference} variant="outline">{preference}</Badge>
+                      ))}
+                  </div>
+              </div>
+            )}
+            {results.goals && results.goals.length > 0 && (
+              <div>
+                  <h4 className="font-semibold mb-2 flex items-center gap-2"><Target className="w-4 h-4 text-primary" /> Goals</h4>
+                  <div className="flex flex-wrap gap-2">
+                      {results.goals.map(goal => (
+                          <Badge key={goal} variant="outline">{goal}</Badge>
+                      ))}
+                  </div>
+              </div>
+            )}
         </CardContent>
       </Card>
 

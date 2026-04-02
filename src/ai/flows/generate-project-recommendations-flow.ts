@@ -27,6 +27,8 @@ export type GenerateProjectRecommendationsInput = z.infer<
 const GenerateProjectRecommendationsOutputSchema = z.object({
   interests: z.array(z.string()).describe("A list of the user's inferred technical interests from the conversation."),
   skillLevel: z.string().describe("The user's inferred skill level (e.g., Beginner, Intermediate, Advanced) from the conversation."),
+  preferences: z.array(z.string()).describe("Inferred user preferences like 'creative', 'logical', 'design-focused', or 'data-driven' based on the conversation.").optional(),
+  goals: z.array(z.string()).describe("Inferred user goals like 'learn a new language', 'build a portfolio piece', or 'find a job' based on the conversation.").optional(),
   projects: z.array(
     z.object({
       title: z.string().describe('The title of the project idea.'),
@@ -52,8 +54,10 @@ const projectRecommendationPrompt = ai.definePrompt({
   input: { schema: GenerateProjectRecommendationsInputSchema },
   output: { schema: GenerateProjectRecommendationsOutputSchema },
   prompt: `You are an AI assistant specialized in recommending programming projects.
-Analyze the entire conversation history provided below to infer the user's technical interests and skill level.
+Analyze the entire conversation history provided below to infer the user's technical interests, skill level, preferences (e.g., creative, logical, data-driven), and goals (e.g., build a portfolio, learn a new technology).
 Based on this analysis, propose 3 unique and interesting project ideas that are personalized to the user.
+
+If you cannot confidently infer preferences or goals from the conversation, do not include them in the output.
 
 You must respond ONLY with a valid JSON object that conforms to the output schema. Do not include any other text or formatting.
 
