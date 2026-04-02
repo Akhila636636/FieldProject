@@ -90,9 +90,11 @@ export default function ChatPage() {
   const { toast } = useToast();
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
-  // Auth protection
+  // Auth protection: Redirect if not loading and no real user is logged in.
   useEffect(() => {
-    if (!isUserLoading && !user) {
+    // A "real" user has a provider (e.g., password, google.com), not an anonymous one.
+    const isRealUser = user && user.providerData.length > 0;
+    if (!isUserLoading && !isRealUser) {
       router.replace('/');
     }
   }, [user, isUserLoading, router]);
@@ -109,7 +111,9 @@ export default function ChatPage() {
         }
       );
       newConversationRef.then((ref) => {
-        setConversationId(ref.id);
+        if (ref) {
+          setConversationId(ref.id);
+        }
       });
     }
   }, [user, firestore, conversationId]);
@@ -162,7 +166,7 @@ export default function ChatPage() {
   );
   const { data: projectRecommendations } =
     useCollection<WithId<ProjectRecommendation>>(recommendationsQuery);
-    
+
   // Query for ALL project recommendations for the user to find bookmarks
   const allRecommendationsQuery = useMemoFirebase(
     () =>
@@ -294,7 +298,7 @@ export default function ChatPage() {
     const bookmarkedProjects = allRecommendations
       ?.filter((p) => p.isBookmarked)
       .map((p) => `${p.title} (Tech: ${p.techStack})`);
-    
+
     const response = await getProjectRecommendations(
       formatChatHistoryForAI(chatHistory),
       bookmarkedProjects || []
@@ -379,7 +383,7 @@ export default function ChatPage() {
     setIsGenerationLoading(false);
   };
 
-  if (isUserLoading || !user) {
+  if (isUserLoading || !user || user.providerData.length === 0) {
     return <ChatPageSkeleton />;
   }
 

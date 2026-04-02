@@ -144,9 +144,11 @@ export default function DashboardPage() {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
 
-  // Auth protection
+  // Auth protection: Redirect if not loading and no real user is logged in.
   useEffect(() => {
-    if (!isUserLoading && !user) {
+    // A "real" user has a provider (e.g., password, google.com), not an anonymous one.
+    const isRealUser = user && user.providerData.length > 0;
+    if (!isUserLoading && !isRealUser) {
       router.replace('/');
     }
   }, [user, isUserLoading, router]);
@@ -180,9 +182,9 @@ export default function DashboardPage() {
   );
   const { data: allRecommendations, isLoading: isLoadingRecs } =
     useCollection<WithId<ProjectRecommendation>>(recommendationsQuery);
-  
+
   const sortedRecommendations = useMemo(
-    () => allRecommendations?.sort((a, b) => a.order - b.order) || [],
+    () => allRecommendations?.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0)).sort((a,b) => a.order - b.order) || [],
     [allRecommendations]
   );
 
@@ -191,7 +193,7 @@ export default function DashboardPage() {
     [sortedRecommendations]
   );
 
-  if (isUserLoading || !user) {
+  if (isUserLoading || !user || user.providerData.length === 0) {
     return <DashboardSkeleton />;
   }
 

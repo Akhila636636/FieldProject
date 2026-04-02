@@ -10,6 +10,7 @@ import {
   signInWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithPopup,
+  signOut,
   type Auth,
   type AuthError,
 } from "firebase/auth";
@@ -81,11 +82,24 @@ export default function AuthPage() {
   const router = useRouter();
   const { toast } = useToast();
 
+  // A "real" user is one who has signed up with a provider (email, google, etc.)
+  // Anonymous users will have an empty providerData array.
+  const isRealUser = user && user.providerData.length > 0;
+
   useEffect(() => {
-    if (!isUserLoading && user) {
+    // If a user object exists but it's not a "real" user (i.e., it's an old anonymous session),
+    // sign them out to force a proper login.
+    if (!isUserLoading && user && !isRealUser) {
+      signOut(auth);
+    }
+  }, [user, isUserLoading, auth, isRealUser]);
+
+  useEffect(() => {
+    // If a "real" user is logged in, redirect them to the chat page.
+    if (!isUserLoading && isRealUser) {
       router.replace("/chat");
     }
-  }, [user, isUserLoading, router]);
+  }, [isRealUser, isUserLoading, router]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -96,14 +110,14 @@ export default function AuthPage() {
     setIsLoading("google");
     try {
       await handleGoogleSignIn(auth);
-      // onAuthStateChanged will handle the redirect
+      // onAuthStateChanged will handle the redirect via the useEffect hooks.
     } catch (error) {
       const authError = error as AuthError;
       console.error("Google Sign-In Error:", authError);
       toast({
         variant: "destructive",
         title: "Authentication Error",
-        description: authError.code === 'auth/popup-closed-by-user' 
+        description: authError.code === 'auth/popup-closed-by-user'
             ? 'The sign-in window was closed. Please try again.'
             : authError.message || "An unknown error occurred during Google sign-in.",
       });
@@ -119,7 +133,7 @@ export default function AuthPage() {
     setIsLoading("email");
     try {
       await handleEmailAuthAction(auth, action, data);
-      // onAuthStateChanged will handle the redirect
+      // onAuthStateChanged will handle the redirect via the useEffect hooks.
     } catch (error) {
       const authError = error as AuthError;
       console.error(authError);
@@ -132,8 +146,9 @@ export default function AuthPage() {
       setIsLoading(false);
     }
   };
-  
-  if (isUserLoading || user) {
+
+  // Show a loading spinner while checking auth state or if a real user is being redirected.
+  if (isUserLoading || isRealUser) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="w-8 h-8 animate-spin" />
@@ -151,9 +166,9 @@ export default function AuthPage() {
         </h1>
       </div>
       <div className="w-full max-w-sm">
-        <Button 
-          variant="outline" 
-          className="w-full mb-4" 
+        <Button
+          variant="outline"
+          className="w-full mb-4"
           onClick={onGoogleSignIn}
           disabled={!!isLoading}
         >

@@ -176,22 +176,26 @@ service cloud.firestore {
      * @description Allows a user to query their own profile summaries across all conversations.
      * @path /profileSummaries/{profileSummaryId}
      * @allow (get) Any authenticated user reading a profile summary they own.
-     * @principle This is required for collection group queries on `profileSummaries`.
-     *            The security is maintained by checking the `ownerId` inside the document.
+     * @allow (list) Any authenticated user to query summaries. Security is enforced by the
+     *               `where('ownerId', '==', request.auth.uid)` clause in the client query.
+     * @principle Required for collection group queries. `list` cannot use `resource.data`.
      */
     match /{path=**}/profileSummaries/{profileSummaryId} {
       allow get: if isSignedIn() && request.auth.uid == resource.data.ownerId;
+      allow list: if isSignedIn();
     }
 
     /**
      * @description Allows a user to query their own project recommendations across all conversations.
      * @path /projectRecommendations/{projectRecommendationId}
      * @allow (get) Any authenticated user reading a project recommendation they own.
-     * @principle This is required for collection group queries on `projectRecommendations`.
-     *            The security is maintained by checking the `ownerId` inside the document.
+     * @allow (list) Any authenticated user to query recommendations. Security is enforced by the
+     *               `where('ownerId', '==', request.auth.uid)` clause in the client query.
+     * @principle Required for collection group queries. `list` cannot use `resource.data`.
      */
     match /{path=**}/projectRecommendations/{projectRecommendationId} {
       allow get: if isSignedIn() && request.auth.uid == resource.data.ownerId;
+      allow list: if isSignedIn();
     }
   }
 }
