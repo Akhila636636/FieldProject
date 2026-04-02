@@ -14,7 +14,6 @@ import {
   collectionGroup,
   query,
   where,
-  orderBy,
   limit,
 } from "firebase/firestore";
 import type {
@@ -31,7 +30,6 @@ import {
   Paintbrush,
   Star,
   Target,
-  Loader2
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -160,7 +158,6 @@ export default function DashboardPage() {
         ? query(
             collectionGroup(firestore, "profileSummaries"),
             where("ownerId", "==", user.uid),
-            orderBy("updatedAt", "desc"),
             limit(1)
           )
         : null,
@@ -176,18 +173,22 @@ export default function DashboardPage() {
       user && firestore
         ? query(
             collectionGroup(firestore, "projectRecommendations"),
-            where("ownerId", "==", user.uid),
-            orderBy("order", "asc")
+            where("ownerId", "==", user.uid)
           )
         : null,
     [user, firestore]
   );
   const { data: allRecommendations, isLoading: isLoadingRecs } =
     useCollection<WithId<ProjectRecommendation>>(recommendationsQuery);
+  
+  const sortedRecommendations = useMemo(
+    () => allRecommendations?.sort((a, b) => a.order - b.order) || [],
+    [allRecommendations]
+  );
 
   const bookmarkedProjects = useMemo(
-    () => allRecommendations?.filter((p) => p.isBookmarked) || [],
-    [allRecommendations]
+    () => sortedRecommendations?.filter((p) => p.isBookmarked) || [],
+    [sortedRecommendations]
   );
 
   if (isUserLoading || !user) {
@@ -283,7 +284,7 @@ export default function DashboardPage() {
              <ProjectsGrid projects={bookmarkedProjects} isLoading={isLoadingRecs} />
           </TabsContent>
           <TabsContent value="all" className="mt-6">
-            <ProjectsGrid projects={allRecommendations || []} isLoading={isLoadingRecs} />
+            <ProjectsGrid projects={sortedRecommendations || []} isLoading={isLoadingRecs} />
           </TabsContent>
         </Tabs>
       </main>
