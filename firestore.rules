@@ -168,5 +168,31 @@ service cloud.firestore {
       allow update: if isExistingOwner(userId) && immutableFieldsAreUnchanged();
       allow delete: if isExistingOwner(userId);
     }
+
+    // --------------------------------------------------------------------
+    // Collection Group Query Rules
+    // --------------------------------------------------------------------
+
+    /**
+     * @description Allows a user to query their own profile summaries across all conversations.
+     * @path /profileSummaries/{profileSummaryId}
+     * @allow (get) Any authenticated user reading a profile summary they own.
+     * @principle This is required for collection group queries on `profileSummaries`.
+     *            The security is maintained by checking the `ownerId` inside the document.
+     */
+    match /{path=**}/profileSummaries/{profileSummaryId} {
+      allow get: if isSignedIn() && request.auth.uid == resource.data.ownerId;
+    }
+
+    /**
+     * @description Allows a user to query their own project recommendations across all conversations.
+     * @path /projectRecommendations/{projectRecommendationId}
+     * @allow (get) Any authenticated user reading a project recommendation they own.
+     * @principle This is required for collection group queries on `projectRecommendations`.
+     *            The security is maintained by checking the `ownerId` inside the document.
+     */
+    match /{path=**}/projectRecommendations/{projectRecommendationId} {
+      allow get: if isSignedIn() && request.auth.uid == resource.data.ownerId;
+    }
   }
 }
