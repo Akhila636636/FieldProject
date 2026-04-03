@@ -43,7 +43,7 @@ const surveySchema = z.object({
   }
   return true;
 }, {
-  message: "Please enter the technologies you know.",
+  message: "Please enter the technologies you want to use.",
   path: ["specificTech"],
 });
 
@@ -207,7 +207,7 @@ export default function NewChatPage() {
                     render={({ field }) => (
                       <FormItem className="space-y-3">
                         <FormLabel className="font-semibold text-base">
-                          What technologies do you know?
+                          What kind of tech do you want to use?
                         </FormLabel>
                         <FormControl>
                           <Input 

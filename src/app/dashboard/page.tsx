@@ -8,6 +8,7 @@ import {
   useFirebase,
   useUser,
   WithId,
+  addDocumentNonBlocking,
 } from "@/firebase";
 import {
   collectionGroup,
@@ -23,6 +24,7 @@ import type {
   ProjectRecommendation,
   UserProfileSummary,
   Conversation,
+  BenchmarkProject,
 } from "@/docs/backend-schema";
 import { formatDistanceToNow } from "date-fns";
 import { Header } from "@/components/app/header";
@@ -37,6 +39,8 @@ import {
   Target,
   Plus,
   MessageSquare,
+  Trophy,
+  TrendingUp,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -155,6 +159,7 @@ export default function DashboardPage() {
   const [userProfile, setUserProfile] = useState<UserProfileSummary | null>(null);
   const [allRecommendations, setAllRecommendations] = useState<WithId<ProjectRecommendation>[]>([]);
   const [conversations, setConversations] = useState<WithId<Conversation & {updatedAt: Timestamp}>[]>([]);
+  const [benchmarkProjects, setBenchmarkProjects] = useState<WithId<BenchmarkProject>[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(true);
 
   // Auth protection: Redirect if not loading and no real user is logged in.
@@ -203,6 +208,16 @@ export default function DashboardPage() {
           const convos = convosSnapshot.docs.map(doc => ({ ...(doc.data() as Conversation & {updatedAt: Timestamp}), id: doc.id }));
           setConversations(convos);
 
+          // Benchmark Gallery query
+          const benchmarkQuery = query(
+            collection(firestore, "benchmarkGallery"),
+            orderBy("upvotes", "desc"),
+            limit(10)
+          );
+          const benchmarkSnapshot = await getDocs(benchmarkQuery);
+          const benchmarks = benchmarkSnapshot.docs.map(doc => ({ ...doc.data() as BenchmarkProject, id: doc.id }));
+          setBenchmarkProjects(benchmarks);
+
         } catch (error) {
           console.error("Error fetching dashboard data:", error);
           // Optionally set an error state here to display a message to the user
@@ -244,12 +259,32 @@ export default function DashboardPage() {
               Your profile and project recommendations at a glance.
             </p>
           </div>
-          <Link href="/new-chat" passHref>
-            <Button size="lg">
-              <Plus className="mr-2 h-4 w-4" />
-              Start New Chat
+          <div className="flex gap-4">
+            <Button 
+               variant="outline" 
+               onClick={async () => {
+                 if (!firestore) return;
+                 const sampleData = [
+                    { category: 'Web Dev', upvotes: 124, title: 'AI-Powered Documentation Generator', description: 'Automatically generate comprehensive documentation from source code using LLMs.', difficulty: 'Advanced' },
+                    { category: 'Mobile App', upvotes: 89, title: 'Local Event Finder', description: 'A community app to discover and post free local events happening this weekend.', difficulty: 'Beginner' },
+                    { category: 'Data Science', upvotes: 215, title: 'Real Estate Price Predictor', description: 'Train a model on public housing data to forecast property values in different zip codes.', difficulty: 'Intermediate' }
+                 ];
+                 setIsLoadingData(true);
+                 for (const proj of sampleData) {
+                    await addDocumentNonBlocking(collection(firestore, "benchmarkGallery"), proj);
+                 }
+                 window.location.reload();
+               }}
+            >
+               Seed Gallery
             </Button>
-          </Link>
+            <Link href="/new-chat" passHref>
+              <Button size="lg">
+                <Plus className="mr-2 h-4 w-4" />
+                Start New Chat
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {isLoadingData ? (
@@ -358,6 +393,49 @@ export default function DashboardPage() {
             )}
           </CardContent>
         </Card>
+
+        <div className="mb-12">
+           <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2 mb-2">
+              <Trophy className="w-6 h-6 text-yellow-500" />
+              Benchmark Gallery
+           </h2>
+           <p className="text-muted-foreground mb-6">
+              Community-powered gallery where users see top problem statements in their category.
+           </p>
+           {isLoadingData ? (
+             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+               {[...Array(3)].map((_, i) => (
+                  <Skeleton key={i} className="h-40 w-full" />
+               ))}
+             </div>
+           ) : benchmarkProjects.length > 0 ? (
+             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+               {benchmarkProjects.map((bp: any) => (
+                 <Card key={bp.id} className="hover:border-primary transition-colors flex flex-col justify-between">
+                   <CardHeader className="pb-2">
+                     <div className="flex justify-between items-start">
+                       <Badge variant="outline">{bp.category}</Badge>
+                       <Badge variant="secondary" className="flex items-center gap-1 font-semibold">
+                          <TrendingUp className="w-3 h-3 text-primary" /> {bp.upvotes}
+                       </Badge>
+                     </div>
+                     <CardTitle className="text-lg mt-2 line-clamp-2">{bp.title}</CardTitle>
+                   </CardHeader>
+                   <CardContent>
+                     <p className="text-sm text-muted-foreground line-clamp-3 mb-4">{bp.description}</p>
+                     <Badge variant={bp.difficulty === 'Beginner' ? 'default' : bp.difficulty === 'Intermediate' ? 'secondary' : 'destructive'}>
+                        {bp.difficulty}
+                     </Badge>
+                   </CardContent>
+                 </Card>
+               ))}
+             </div>
+           ) : (
+             <Card className="text-center text-muted-foreground py-12">
+               <p>No benchmarks available yet. Check back later!</p>
+             </Card>
+           )}
+        </div>
 
         <Tabs defaultValue="bookmarked" className="w-full">
           <TabsList className="grid w-full grid-cols-2 md:w-[400px]">

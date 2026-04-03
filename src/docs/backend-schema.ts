@@ -119,4 +119,29 @@ export type ProjectRecommendation = {
   isBookmarked?: boolean;
 };
 
-    
+export type BenchmarkProject = {
+  /**
+   * Unique identifier for the BenchmarkProject entity.
+   */
+  id: string;
+  /**
+   * The title of the problem statement.
+   */
+  title: string;
+  /**
+   * A detailed description of the problem statement.
+   */
+  description: string;
+  /**
+   * The category of the problem statement (e.g., 'Web Dev', 'AI').
+   */
+  category: string;
+  /**
+   * The difficulty level (e.g., 'Beginner', 'Intermediate', 'Advanced').
+   */
+  difficulty: string;
+  /**
+   * Number of upvotes from the community.
+   */
+  upvotes: number;
+};
