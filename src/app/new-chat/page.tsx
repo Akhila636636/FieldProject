@@ -25,6 +25,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Input } from '@/components/ui/input';
 import { Loader2, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -32,9 +33,18 @@ const surveySchema = z.object({
   techExperience: z.enum(['no-idea', 'have-idea'], {
     required_error: 'Please select your tech experience.',
   }),
+  specificTech: z.string().optional(),
   projectGoal: z.enum(['subject-project', 'resume', 'minor-major', 'fun'], {
     required_error: 'Please select your project goal.',
   }),
+}).refine(data => {
+  if (data.techExperience === 'have-idea' && (!data.specificTech || data.specificTech.trim() === '')) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Please enter the technologies you know.",
+  path: ["specificTech"],
 });
 
 type SurveyFormValues = z.infer<typeof surveySchema>;
@@ -48,7 +58,12 @@ export default function NewChatPage() {
 
   const form = useForm<SurveyFormValues>({
     resolver: zodResolver(surveySchema),
+    defaultValues: {
+      specificTech: '',
+    }
   });
+
+  const techExperience = form.watch('techExperience');
 
   const onSubmit = async (data: SurveyFormValues) => {
     if (!user || !firestore) {
@@ -81,7 +96,7 @@ export default function NewChatPage() {
       const techExperienceText =
         data.techExperience === 'no-idea'
           ? 'I have no specific tech in mind and am looking for guidance'
-          : 'I have some technologies I might want to use';
+          : `I have some technologies I want to use, specifically: ${data.specificTech}`;
 
       const projectGoalText = {
         'subject-project': 'a subject-based project for school',
@@ -184,6 +199,28 @@ export default function NewChatPage() {
                     </FormItem>
                   )}
                 />
+
+                {techExperience === 'have-idea' && (
+                  <FormField
+                    control={form.control}
+                    name="specificTech"
+                    render={({ field }) => (
+                      <FormItem className="space-y-3">
+                        <FormLabel className="font-semibold text-base">
+                          What technologies do you know?
+                        </FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="e.g. React, Node.js, Python, MongoDB..." 
+                            {...field} 
+                            value={field.value || ''}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
 
                 <FormField
                   control={form.control}
