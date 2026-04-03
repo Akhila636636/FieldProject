@@ -27,8 +27,15 @@ export async function getSimpleChatResponse(
     return { data: response.response };
   } catch (e: any) {
     console.error("Error getting chat response:", e);
+    
+    // Check if it's a rate limit error (429)
+    const errorMessage = e?.message || "";
+    if (errorMessage.includes("429") || errorMessage.includes("RESOURCE_EXHAUSTED") || errorMessage.includes("Quota exceeded")) {
+      return { error: "The AI is currently overloaded with requests right now. Please wait about a minute and try again!" };
+    }
+
     return {
-      error: e.message || "An unexpected error occurred while communicating with the AI. Please try again later.",
+      error: errorMessage || "An unexpected error occurred while communicating with the AI. Please try again later.",
     };
   }
 }
@@ -57,8 +64,15 @@ export async function getProjectRecommendations(
     return { data: response };
   } catch (e: any) {
     console.error("Error getting project recommendations:", e);
+
+    // Check if it's a rate limit error (429)
+    const errorMessage = e?.message || "";
+    if (errorMessage.includes("429") || errorMessage.includes("RESOURCE_EXHAUSTED") || errorMessage.includes("Quota exceeded")) {
+      return { error: "The AI is currently overloaded with requests right now. Please wait about a minute and try again!" };
+    }
+
     return {
-      error: e.message || "An unexpected error occurred while communicating with the AI. Please try again later.",
+      error: errorMessage || "An unexpected error occurred while communicating with the AI. Please try again later.",
     };
   }
 }
