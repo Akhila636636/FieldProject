@@ -7,10 +7,16 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { RecommendationsDisplay } from "@/components/app/recommendations-display";
 import { Lightbulb } from "lucide-react";
 import { useEffect, useRef } from "react";
+import type { WithId } from "@/firebase";
+import type { ProjectRecommendation } from "@/docs/backend-schema";
+
+export type EnrichedRecommendations = Omit<GenerateProjectRecommendationsOutput, 'projects'> & {
+  projects: WithId<ProjectRecommendation>[];
+};
 
 type ChatDisplayProps = {
   chatHistory: ChatMessage[];
-  recommendations: GenerateProjectRecommendationsOutput | null;
+  recommendations: EnrichedRecommendations | null;
   isLoading: boolean;
 };
 

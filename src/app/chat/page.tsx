@@ -10,6 +10,7 @@ import { Header } from "@/components/app/header";
 import { ChatForm } from "@/components/app/chat-form";
 import { useToast } from "@/hooks/use-toast";
 import { ChatDisplay } from "@/components/app/chat-display";
+import type { EnrichedRecommendations } from "@/components/app/chat-display";
 import type {
   GenerateProjectRecommendationsOutput,
   GenerateProjectRecommendationsInput,
@@ -159,7 +160,7 @@ export default function ChatPage() {
 
 
   // Construct the full recommendations object for the UI
-  const recommendations = useMemo<GenerateProjectRecommendationsOutput | null>(() => {
+  const recommendations = useMemo<EnrichedRecommendations | null>(() => {
     if (!profileSummaries?.[0] || !projectRecommendations) {
       return null;
     }

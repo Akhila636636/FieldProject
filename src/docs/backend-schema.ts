@@ -144,4 +144,24 @@ export type BenchmarkProject = {
    * Number of upvotes from the community.
    */
   upvotes: number;
+  /**
+   * The UID of the user who seeded this project (if any).
+   */
+  seededByUserId?: string;
+  /**
+   * Whether the seeding user is currently building this project.
+   */
+  isBuildingThis?: boolean;
+  /**
+   * Whether the seeding user has completed this project.
+   */
+  isCompleted?: boolean;
+  /**
+   * Whether the seeding user would recommend this project to others.
+   */
+  wouldRecommend?: boolean;
+  /**
+   * The tech stack of the project, carried from the recommendation.
+   */
+  techStack?: string;
 };

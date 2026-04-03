@@ -1,11 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Rocket, Cpu, BarChart, Heart, Briefcase, Milestone, Bookmark } from "lucide-react";
+import { Rocket, Cpu, BarChart, Heart, Briefcase, Milestone, Bookmark, HardHat } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { useFirebase, useUser, updateDocumentNonBlocking } from "@/firebase";
-import { doc } from "firebase/firestore";
+import { useFirebase, useUser, updateDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase";
+import { doc, collection, query, where, getDocs, deleteDoc } from "firebase/firestore";
 import { cn } from "@/lib/utils";
+import { useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 type ProjectCardProps = {
   id: string;
@@ -27,16 +29,74 @@ type ProjectCardProps = {
 export function ProjectCard({ id, conversationId, title, description, whyItMatchesUser, techStack, difficulty, resumeValue, roadmap, isBookmarked }: ProjectCardProps) {
   const { firestore } = useFirebase();
   const { user } = useUser();
+  const { toast } = useToast();
+  const [isBuilding, setIsBuilding] = useState(false);
+  const [isBuildingLoading, setIsBuildingLoading] = useState(false);
+
+  // Check if user is already building this project
+  useEffect(() => {
+    if (!user || !firestore || !id) return;
+    const checkBuilding = async () => {
+      const q = query(
+        collection(firestore, "benchmarkGallery"),
+        where("seededByUserId", "==", user.uid),
+        where("sourceProjectId", "==", id)
+      );
+      const snap = await getDocs(q);
+      setIsBuilding(!snap.empty);
+    };
+    checkBuilding();
+  }, [user, firestore, id]);
 
   const handleBookmarkToggle = () => {
     if (!user || !firestore || !conversationId || !id) return;
-
     const projectRef = doc(firestore, `users/${user.uid}/conversations/${conversationId}/projectRecommendations/${id}`);
     updateDocumentNonBlocking(projectRef, {
         isBookmarked: !isBookmarked
     });
-  }
-  
+  };
+
+  const handleBuildingToggle = async () => {
+    if (!user || !firestore || !id) return;
+    setIsBuildingLoading(true);
+    try {
+      const q = query(
+        collection(firestore, "benchmarkGallery"),
+        where("seededByUserId", "==", user.uid),
+        where("sourceProjectId", "==", id)
+      );
+      const snap = await getDocs(q);
+
+      if (!snap.empty) {
+        // Already seeded — remove it
+        for (const docSnap of snap.docs) {
+          await deleteDoc(docSnap.ref);
+        }
+        setIsBuilding(false);
+        toast({ title: "Removed from Seed Gallery", description: `"${title}" has been removed from your seed gallery.` });
+      } else {
+        // Add to seed gallery
+        await addDocumentNonBlocking(collection(firestore, "benchmarkGallery"), {
+          title,
+          description,
+          category: techStack.split(",")[0]?.trim() || "General",
+          difficulty,
+          techStack,
+          upvotes: 0,
+          seededByUserId: user.uid,
+          sourceProjectId: id,
+          isBuildingThis: true,
+          isCompleted: false,
+          wouldRecommend: false,
+        });
+        setIsBuilding(true);
+        toast({ title: "Added to Seed Gallery! 🌱", description: `"${title}" has been added to the community seed gallery.` });
+      }
+    } finally {
+      setIsBuildingLoading(false);
+    }
+  };
+
   return (
     <Card className="transition-all hover:shadow-lg hover:border-primary/30 flex flex-col bg-card/70 relative">
       <CardHeader>
@@ -89,6 +149,20 @@ export function ProjectCard({ id, conversationId, title, description, whyItMatch
              <span className="text-muted-foreground">{techStack}</span>
           </div>
         </div>
+
+        <Button
+          variant={isBuilding ? "default" : "outline"}
+          size="sm"
+          className={cn(
+            "w-full gap-2 transition-all",
+            isBuilding && "bg-emerald-600 hover:bg-emerald-700 border-emerald-600 text-white"
+          )}
+          onClick={handleBuildingToggle}
+          disabled={isBuildingLoading}
+        >
+          <HardHat className="w-4 h-4" />
+          {isBuilding ? "✅ I'm Building This!" : "🚀 I'm Building This"}
+        </Button>
       </CardContent>
     </Card>
   );

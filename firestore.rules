@@ -40,10 +40,13 @@ service cloud.firestore {
     }
 
     // Benchmark Gallery: community-driven, any signed-in user can read.
-    // Any signed-in user can seed/write benchmark entries.
+    // Any signed-in user can create a new entry (seeding a project).
+    // Only the user who seeded the entry can update or delete it.
     match /benchmarkGallery/{benchmarkId} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null &&
+        resource.data.seededByUserId == request.auth.uid;
     }
   }
 }

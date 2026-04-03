@@ -9,6 +9,7 @@ import {
   useUser,
   WithId,
   addDocumentNonBlocking,
+  updateDocumentNonBlocking,
 } from "@/firebase";
 import {
   collectionGroup,
@@ -19,6 +20,7 @@ import {
   collection,
   orderBy,
   Timestamp,
+  doc,
 } from "firebase/firestore";
 import type {
   ProjectRecommendation,
@@ -41,11 +43,15 @@ import {
   MessageSquare,
   Trophy,
   TrendingUp,
+  CheckCircle2,
+  ThumbsUp,
+  HardHat,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
 
 function DashboardSkeleton() {
   return (
@@ -410,29 +416,87 @@ export default function DashboardPage() {
              </div>
            ) : benchmarkProjects.length > 0 ? (
              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-               {benchmarkProjects.map((bp: any) => (
-                 <Card key={bp.id} className="hover:border-primary transition-colors flex flex-col justify-between">
-                   <CardHeader className="pb-2">
-                     <div className="flex justify-between items-start">
-                       <Badge variant="outline">{bp.category}</Badge>
-                       <Badge variant="secondary" className="flex items-center gap-1 font-semibold">
-                          <TrendingUp className="w-3 h-3 text-primary" /> {bp.upvotes}
+               {benchmarkProjects.map((bp: any) => {
+                 const isOwner = user && bp.seededByUserId === user.uid;
+                 return (
+                   <Card key={bp.id} className={cn("hover:border-primary transition-colors flex flex-col justify-between", isOwner && "border-emerald-500/40 bg-emerald-950/10")}>
+                     <CardHeader className="pb-2">
+                       <div className="flex justify-between items-start">
+                         <div className="flex items-center gap-2">
+                           <Badge variant="outline">{bp.category}</Badge>
+                           {isOwner && (
+                             <Badge variant="outline" className="border-emerald-500 text-emerald-400 text-xs">
+                               <HardHat className="w-3 h-3 mr-1" /> Building
+                             </Badge>
+                           )}
+                         </div>
+                         <Badge variant="secondary" className="flex items-center gap-1 font-semibold">
+                            <TrendingUp className="w-3 h-3 text-primary" /> {bp.upvotes}
+                         </Badge>
+                       </div>
+                       <CardTitle className="text-lg mt-2 line-clamp-2">{bp.title}</CardTitle>
+                     </CardHeader>
+                     <CardContent>
+                       <p className="text-sm text-muted-foreground line-clamp-3 mb-4">{bp.description}</p>
+                       <Badge variant={bp.difficulty === 'Beginner' ? 'default' : bp.difficulty === 'Intermediate' ? 'secondary' : 'destructive'}>
+                          {bp.difficulty}
                        </Badge>
-                     </div>
-                     <CardTitle className="text-lg mt-2 line-clamp-2">{bp.title}</CardTitle>
-                   </CardHeader>
-                   <CardContent>
-                     <p className="text-sm text-muted-foreground line-clamp-3 mb-4">{bp.description}</p>
-                     <Badge variant={bp.difficulty === 'Beginner' ? 'default' : bp.difficulty === 'Intermediate' ? 'secondary' : 'destructive'}>
-                        {bp.difficulty}
-                     </Badge>
-                   </CardContent>
-                 </Card>
-               ))}
+
+                       {isOwner && firestore && (
+                         <div className="mt-4 pt-4 border-t border-border/50 space-y-2">
+                           <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wide mb-2">Your Progress</p>
+                           <div className="flex gap-2">
+                             <Button
+                               size="sm"
+                               variant={bp.isCompleted ? "default" : "outline"}
+                               className={cn(
+                                 "flex-1 gap-1 text-xs",
+                                 bp.isCompleted && "bg-emerald-600 hover:bg-emerald-700 border-emerald-600 text-white"
+                               )}
+                               onClick={() => {
+                                 updateDocumentNonBlocking(
+                                   doc(firestore, "benchmarkGallery", bp.id),
+                                   { isCompleted: !bp.isCompleted }
+                                 );
+                                 setBenchmarkProjects(prev =>
+                                   prev.map(p => p.id === bp.id ? { ...p, isCompleted: !bp.isCompleted } : p)
+                                 );
+                               }}
+                             >
+                               <CheckCircle2 className="w-3 h-3" />
+                               {bp.isCompleted ? "Completed! ✓" : "Mark Complete"}
+                             </Button>
+                             <Button
+                               size="sm"
+                               variant={bp.wouldRecommend ? "default" : "outline"}
+                               className={cn(
+                                 "flex-1 gap-1 text-xs",
+                                 bp.wouldRecommend && "bg-blue-600 hover:bg-blue-700 border-blue-600 text-white"
+                               )}
+                               onClick={() => {
+                                 updateDocumentNonBlocking(
+                                   doc(firestore, "benchmarkGallery", bp.id),
+                                   { wouldRecommend: !bp.wouldRecommend }
+                                 );
+                                 setBenchmarkProjects(prev =>
+                                   prev.map(p => p.id === bp.id ? { ...p, wouldRecommend: !bp.wouldRecommend } : p)
+                                 );
+                               }}
+                             >
+                               <ThumbsUp className="w-3 h-3" />
+                               {bp.wouldRecommend ? "Recommended! 👍" : "Recommend?"}
+                             </Button>
+                           </div>
+                         </div>
+                       )}
+                     </CardContent>
+                   </Card>
+                 );
+               })}
              </div>
            ) : (
              <Card className="text-center text-muted-foreground py-12">
-               <p>No benchmarks available yet. Check back later!</p>
+               <p>No benchmarks available yet. Mark a project as "I'm Building This" to add it here!</p>
              </Card>
            )}
         </div>
