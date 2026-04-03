@@ -25,10 +25,10 @@ export async function getSimpleChatResponse(
     }
 
     return { data: response.response };
-  } catch (e) {
+  } catch (e: any) {
     console.error("Error getting chat response:", e);
     return {
-      error: "An unexpected error occurred while communicating with the AI. Please try again later.",
+      error: e.message || "An unexpected error occurred while communicating with the AI. Please try again later.",
     };
   }
 }
@@ -55,10 +55,10 @@ export async function getProjectRecommendations(
     }
 
     return { data: response };
-  } catch (e) {
+  } catch (e: any) {
     console.error("Error getting project recommendations:", e);
     return {
-      error: "An unexpected error occurred while communicating with the AI. Please try again later.",
+      error: e.message || "An unexpected error occurred while communicating with the AI. Please try again later.",
     };
   }
 }
