@@ -9,7 +9,6 @@ import {
   useUser,
   WithId,
   addDocumentNonBlocking,
-  updateDocumentNonBlocking,
 } from "@/firebase";
 import {
   collectionGroup,
@@ -20,7 +19,6 @@ import {
   collection,
   orderBy,
   Timestamp,
-  doc,
 } from "firebase/firestore";
 import type {
   ProjectRecommendation,
@@ -41,11 +39,6 @@ import {
   Target,
   Plus,
   MessageSquare,
-  Trophy,
-  TrendingUp,
-  CheckCircle2,
-  ThumbsUp,
-  HardHat,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -266,24 +259,6 @@ export default function DashboardPage() {
             </p>
           </div>
           <div className="flex gap-4">
-            <Button 
-               variant="outline" 
-               onClick={async () => {
-                 if (!firestore) return;
-                 const sampleData = [
-                    { category: 'Web Dev', upvotes: 124, title: 'AI-Powered Documentation Generator', description: 'Automatically generate comprehensive documentation from source code using LLMs.', difficulty: 'Advanced' },
-                    { category: 'Mobile App', upvotes: 89, title: 'Local Event Finder', description: 'A community app to discover and post free local events happening this weekend.', difficulty: 'Beginner' },
-                    { category: 'Data Science', upvotes: 215, title: 'Real Estate Price Predictor', description: 'Train a model on public housing data to forecast property values in different zip codes.', difficulty: 'Intermediate' }
-                 ];
-                 setIsLoadingData(true);
-                 for (const proj of sampleData) {
-                    await addDocumentNonBlocking(collection(firestore, "benchmarkGallery"), proj);
-                 }
-                 window.location.reload();
-               }}
-            >
-               Seed Gallery
-            </Button>
             <Link href="/new-chat" passHref>
               <Button size="lg">
                 <Plus className="mr-2 h-4 w-4" />
@@ -399,107 +374,6 @@ export default function DashboardPage() {
             )}
           </CardContent>
         </Card>
-
-        <div className="mb-12">
-           <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2 mb-2">
-              <Trophy className="w-6 h-6 text-yellow-500" />
-              Benchmark Gallery
-           </h2>
-           <p className="text-muted-foreground mb-6">
-              Community-powered gallery where users see top problem statements in their category.
-           </p>
-           {isLoadingData ? (
-             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-               {[...Array(3)].map((_, i) => (
-                  <Skeleton key={i} className="h-40 w-full" />
-               ))}
-             </div>
-           ) : benchmarkProjects.length > 0 ? (
-             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-               {benchmarkProjects.map((bp: any) => {
-                 const isOwner = user && bp.seededByUserId === user.uid;
-                 return (
-                   <Card key={bp.id} className={cn("hover:border-primary transition-colors flex flex-col justify-between", isOwner && "border-emerald-500/40 bg-emerald-950/10")}>
-                     <CardHeader className="pb-2">
-                       <div className="flex justify-between items-start">
-                         <div className="flex items-center gap-2">
-                           <Badge variant="outline">{bp.category}</Badge>
-                           {isOwner && (
-                             <Badge variant="outline" className="border-emerald-500 text-emerald-400 text-xs">
-                               <HardHat className="w-3 h-3 mr-1" /> Building
-                             </Badge>
-                           )}
-                         </div>
-                         <Badge variant="secondary" className="flex items-center gap-1 font-semibold">
-                            <TrendingUp className="w-3 h-3 text-primary" /> {bp.upvotes}
-                         </Badge>
-                       </div>
-                       <CardTitle className="text-lg mt-2 line-clamp-2">{bp.title}</CardTitle>
-                     </CardHeader>
-                     <CardContent>
-                       <p className="text-sm text-muted-foreground line-clamp-3 mb-4">{bp.description}</p>
-                       <Badge variant={bp.difficulty === 'Beginner' ? 'default' : bp.difficulty === 'Intermediate' ? 'secondary' : 'destructive'}>
-                          {bp.difficulty}
-                       </Badge>
-
-                       {isOwner && firestore && (
-                         <div className="mt-4 pt-4 border-t border-border/50 space-y-2">
-                           <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wide mb-2">Your Progress</p>
-                           <div className="flex gap-2">
-                             <Button
-                               size="sm"
-                               variant={bp.isCompleted ? "default" : "outline"}
-                               className={cn(
-                                 "flex-1 gap-1 text-xs",
-                                 bp.isCompleted && "bg-emerald-600 hover:bg-emerald-700 border-emerald-600 text-white"
-                               )}
-                               onClick={() => {
-                                 updateDocumentNonBlocking(
-                                   doc(firestore, "benchmarkGallery", bp.id),
-                                   { isCompleted: !bp.isCompleted }
-                                 );
-                                 setBenchmarkProjects(prev =>
-                                   prev.map(p => p.id === bp.id ? { ...p, isCompleted: !bp.isCompleted } : p)
-                                 );
-                               }}
-                             >
-                               <CheckCircle2 className="w-3 h-3" />
-                               {bp.isCompleted ? "Completed! ✓" : "Mark Complete"}
-                             </Button>
-                             <Button
-                               size="sm"
-                               variant={bp.wouldRecommend ? "default" : "outline"}
-                               className={cn(
-                                 "flex-1 gap-1 text-xs",
-                                 bp.wouldRecommend && "bg-blue-600 hover:bg-blue-700 border-blue-600 text-white"
-                               )}
-                               onClick={() => {
-                                 updateDocumentNonBlocking(
-                                   doc(firestore, "benchmarkGallery", bp.id),
-                                   { wouldRecommend: !bp.wouldRecommend }
-                                 );
-                                 setBenchmarkProjects(prev =>
-                                   prev.map(p => p.id === bp.id ? { ...p, wouldRecommend: !bp.wouldRecommend } : p)
-                                 );
-                               }}
-                             >
-                               <ThumbsUp className="w-3 h-3" />
-                               {bp.wouldRecommend ? "Recommended! 👍" : "Recommend?"}
-                             </Button>
-                           </div>
-                         </div>
-                       )}
-                     </CardContent>
-                   </Card>
-                 );
-               })}
-             </div>
-           ) : (
-             <Card className="text-center text-muted-foreground py-12">
-               <p>No benchmarks available yet. Mark a project as "I'm Building This" to add it here!</p>
-             </Card>
-           )}
-        </div>
 
         <Tabs defaultValue="bookmarked" className="w-full">
           <TabsList className="grid w-full grid-cols-2 md:w-[400px]">
