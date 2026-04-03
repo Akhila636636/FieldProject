@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -49,7 +48,7 @@ export type ChatMessage = {
 };
 
 // After this many USER messages, the "Generate" button will appear.
-const USER_MESSAGES_THRESHOLD = 2;
+const USER_MESSAGES_THRESHOLD = 3;
 
 function ChatPageSkeleton() {
   return (
@@ -101,25 +100,13 @@ export default function ChatPage() {
     }
   }, [user, isUserLoading, router]);
 
-  // Effect to create a new conversation for the user if no ID is in the URL
+  // Redirect to dashboard if no conversation ID is present in the URL
   useEffect(() => {
-    if (user && firestore && !conversationId) {
-      const newConversationRef = addDocumentNonBlocking(
-        collection(firestore, `users/${user.uid}/conversations`),
-        {
-          ownerId: user.uid,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        }
-      );
-      newConversationRef.then((ref) => {
-        if (ref) {
-          router.replace(`/chat?id=${ref.id}`, { scroll: false });
-          setConversationId(ref.id);
-        }
-      });
+    if (!isUserLoading && user && !initialConversationId) {
+      router.replace('/dashboard');
     }
-  }, [user, firestore, conversationId, router]);
+  }, [isUserLoading, user, initialConversationId, router]);
+
 
   // Subscribe to chat messages for the current conversation
   const messagesQuery = useMemoFirebase(
@@ -373,7 +360,7 @@ export default function ChatPage() {
     setIsGenerationLoading(false);
   };
 
-  if (isUserLoading || !user || user.providerData.length === 0) {
+  if (isUserLoading || !user || !initialConversationId) {
     return <ChatPageSkeleton />;
   }
 

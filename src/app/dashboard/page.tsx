@@ -244,7 +244,7 @@ export default function DashboardPage() {
               Your profile and project recommendations at a glance.
             </p>
           </div>
-          <Link href="/chat" passHref>
+          <Link href="/new-chat" passHref>
             <Button size="lg">
               <Plus className="mr-2 h-4 w-4" />
               Start New Chat
